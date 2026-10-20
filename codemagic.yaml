@@ -170,3 +170,73 @@ workflows:
       #   - pattern: 'v*'
       #     include: true
       cancel_previous_builds: true
+
+  # ---------------------------------------------------------------------------
+  # Android · CH Play (tài khoản tổ chức CLOUD & CORAL, app id 4975683663735411387)
+  # ---------------------------------------------------------------------------
+  #
+  # Package app.workreflection.mobile — trùng bundle id iOS. Khoá vĩnh viễn từ
+  # lần tải AAB đầu tiên lên Play Console.
+  #
+  # Trước khi chạy lần đầu phải làm 1 việc ngoài repo: nạp upload keystore vào
+  # Codemagic > Team settings > Code signing identities > Android keystores với
+  # reference name đúng bằng "workreflection-upload" (khai ở android_signing
+  # bên dưới). Codemagic sẽ tự đặt CM_KEYSTORE_PATH/CM_KEYSTORE_PASSWORD/
+  # CM_KEY_ALIAS/CM_KEY_PASSWORD, và android/app/build.gradle.kts đọc các biến đó.
+  #
+  # Chưa có khối publishing google_play: Google bắt tải tay AAB ĐẦU TIÊN qua
+  # Play Console, và đẩy tự động cần service account có quyền Play Developer
+  # API. Hiện cứ tải file .aab trong artifacts lên track Internal testing.
+  android-release:
+    name: Android · CH Play (AAB)
+    instance_type: linux_x2
+    max_build_duration: 60
+
+    environment:
+      android_signing:
+        - workreflection-upload
+      flutter: 3.41.4
+
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+
+      - name: Flutter analyze
+        script: flutter analyze
+
+      - name: Flutter test
+        script: flutter test
+
+      - name: Build AAB
+        script: |
+          set -e
+
+          # versionCode phải tăng dần qua mọi lần tải lên Play, kể cả bản chỉ
+          # nằm ở Internal testing. $BUILD_NUMBER là bộ đếm build của chính
+          # workflow này trên Codemagic nên tự tăng — chừng nào chưa có service
+          # account để hỏi số mới nhất trên Play thì dùng tạm nó.
+          #
+          # FORCE_STORE_POLICY=silent → không QR, không giá, không nút sang web.
+          # Google Play Payments policy cấm bán hàng số ngoài Play Billing và
+          # cấm dẫn ra web ở kho Việt Nam. Chưa dùng `app_store` vì
+          # wr-verify-iap mới kiểm được hoá đơn Apple: bật lên thì người dùng
+          # Android trả tiền xong mà server không cấp Premium.
+          flutter build appbundle --release \
+            --dart-define=FORCE_STORE_POLICY=silent \
+            --build-name=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1) \
+            --build-number="$BUILD_NUMBER"
+
+    artifacts:
+      - build/app/outputs/bundle/release/*.aab
+      - build/app/outputs/mapping/release/mapping.txt
+
+    publishing:
+      email:
+        recipients:
+          - thedangs7@gmail.com
+        notify:
+          success: true
+          failure: true
+
+    triggering:
+      cancel_previous_builds: true

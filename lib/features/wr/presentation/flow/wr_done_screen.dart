@@ -19,6 +19,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/l10n/wr_tr.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../auth/guest_session.dart';
 import '../../../auth/presentation/wr_save_journey_sheet.dart';
 import '../../../../core/theme/wr_colors.dart';
@@ -65,6 +66,8 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
     _closed = episode;
     try {
       await ref.read(episodeFlowProvider.notifier).integrate();
+      await setSeenOnboarding();
+      ref.invalidate(seenOnboardingProvider);
     } catch (e, s) {
       logFlowError('integrate', e, s);
       /* best-effort: nội dung đã được ghi ở từng bước */
@@ -113,7 +116,11 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
   void _home() {
     ref.read(episodeFlowProvider.notifier).leave();
     ref.read(pendingEnergyProvider.notifier).state = null;
-    context.go('/home');
+    if (ref.read(isGuestProvider)) {
+      context.go('/auth/save');
+    } else {
+      context.go('/home');
+    }
   }
 
   @override

@@ -63,6 +63,7 @@ class _Harness {
     initialLocation: '/onboarding',
     routes: [
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
+      GoRoute(path: '/auth', builder: (_, _) => const Text('AUTH')),
       GoRoute(path: '/home', builder: (_, _) => const Text('HOME')),
       GoRoute(path: '/wr/flow/step', builder: (_, _) => const Text('STEP')),
     ],
@@ -168,7 +169,7 @@ void main() {
   });
 
   testWidgets(
-    'chọn cảm xúc → một phiên khách, ghi check-in, vào luồng với Home bên dưới',
+    'chọn cảm xúc → mở phiên khách, ghi check-in, vào /wr/flow/step để làm reflection',
     (tester) async {
       final h = _Harness();
       await tester.pumpWidget(h.app());
@@ -181,13 +182,9 @@ void main() {
 
       expect(h.auth.anonymousSignIns, 1);
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getBool('seen_onboarding'), isTrue);
-      expect(h.repo.upsertCheckinCalls.single.mood, Mood.stressed);
+      // Chưa đánh dấu xong onboarding khi đang làm reflection đầu tiên
+      expect(prefs.getBool('seen_onboarding'), isNull);
       expect(find.text('STEP'), findsOneWidget);
-      expect(h.router.canPop(), isTrue);
-      h.router.pop();
-      await tester.pumpAndSettle();
-      expect(find.text('HOME'), findsOneWidget);
     },
   );
 
@@ -209,30 +206,20 @@ void main() {
     expect(heroHeight(4), 188, reason: 'bước chọn cảm xúc');
   });
 
-  testWidgets('đã có phiên thì không mở phiên khách thứ hai', (tester) async {
-    final h = _Harness(hasSession: true);
-    await tester.pumpWidget(h.app());
-    await _settle(tester);
-    await _toMoodStep(tester);
-
-    await tester.tap(find.byKey(const Key('onboarding_mood_ok')));
-    await tester.pumpAndSettle();
-    expect(h.auth.anonymousSignIns, 0);
-    expect(find.text('STEP'), findsOneWidget);
-  });
-
-  testWidgets('Bỏ qua → phiên khách rồi về Home', (tester) async {
+  testWidgets('Bỏ qua → ghi đã xem, sang /auth tạo tài khoản', (tester) async {
     final h = _Harness();
     await tester.pumpWidget(h.app());
     await _settle(tester);
 
     await tester.tap(find.byKey(const Key('onboarding_skip')));
     await tester.pumpAndSettle();
-    expect(h.auth.anonymousSignIns, 1);
-    expect(find.text('HOME'), findsOneWidget);
+    expect(h.auth.anonymousSignIns, 0);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('seen_onboarding'), isTrue);
+    expect(find.text('AUTH'), findsOneWidget);
   });
 
-  testWidgets('Đăng nhập → ghi đã xem, KHÔNG mở phiên khách', (tester) async {
+  testWidgets('Đăng nhập → ghi đã xem, sang /auth', (tester) async {
     final h = _Harness();
     await tester.pumpWidget(h.app());
     await _settle(tester);
@@ -242,6 +229,7 @@ void main() {
     expect(h.auth.anonymousSignIns, 0);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('seen_onboarding'), isTrue);
+    expect(find.text('AUTH'), findsOneWidget);
   });
 
   for (final (width, en) in [(320.0, false), (320.0, true), (390.0, false)]) {

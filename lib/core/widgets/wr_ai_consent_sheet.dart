@@ -189,7 +189,7 @@ class _Actions extends StatelessWidget {
               child: Text(
                 wrKeepCompounds(saving
                     ? tr('Đang lưu…', 'Saving…')
-                    : tr('Đồng ý và tiếp tục', 'Agree and continue')),
+                    : tr('Bật phần đọc hiểu bằng AI', 'Turn on AI understanding')),
                 style: const TextStyle(
                   fontSize: 15.5,
                   fontWeight: FontWeight.w700,
@@ -212,7 +212,7 @@ class _Actions extends StatelessWidget {
                 ),
               ),
               child: Text(
-                wrKeepCompounds(tr('Không, để sau', 'No, not now')),
+                wrKeepCompounds(tr('Để sau', 'Not now')),
                 style: const TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w600,
@@ -237,30 +237,133 @@ class WrAiDisclosureBody extends StatelessWidget {
       children: [
         Text(
           wrKeepCompounds(tr(
-            'Trước khi dùng những phần có AI',
-            'Before you use the AI features',
+            'Phần đọc hiểu bằng AI hoạt động như thế nào',
+            'How AI understanding works in WorkReflection',
           )),
           key: const Key('wr_ai_consent_title'),
           style: const TextStyle(
-            fontSize: 19,
+            fontSize: 19.5,
             fontWeight: FontWeight.w800,
             color: WrColors.navy,
             height: 1.35,
           ),
         ),
-        const SizedBox(height: 8),
-        WrParagraph(
-          kWrAiDisclosureSummary,
+        const SizedBox(height: 10),
+        Text(
+          wrKeepCompounds(tr(
+            'WorkReflection dùng AI ở một vài chỗ để đồng hành cùng bạn:',
+            'WorkReflection uses AI in a few places to accompany you:',
+          )),
           style: const TextStyle(
-            fontSize: 13.5,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
             color: WrColors.navy,
-            height: 1.6,
+            height: 1.5,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 12),
+        _OverviewFeatureCard(
+          title: tr('Người đồng hành', 'Companion'),
+          desc: tr(
+            'Trò chuyện cùng bạn về hành trình nhìn lại.',
+            'Chat with you about your reflection journey.',
+          ),
+        ),
+        const SizedBox(height: 8),
+        _OverviewFeatureCard(
+          title: tr('Diễn biến trong tab Hành trình', 'Your story in Journey tab'),
+          desc: tr(
+            'Đọc lại nhiều lần nhìn lại của bạn để viết bản tổng kết một chặng.',
+            'Reflect on your look-backs to summarize a period.',
+          ),
+        ),
+        const SizedBox(height: 8),
+        _OverviewFeatureCard(
+          title: tr('Bạn đang khó ở chỗ nào (tab Hiểu mình)', 'Where it is hard for you (Understand tab)'),
+          desc: tr(
+            'Đọc ra điểm khó thật từ những gì bạn đã viết.',
+            'Identify genuine challenges from what you have logged.',
+          ),
+        ),
+        const SizedBox(height: 8),
+        _OverviewFeatureCard(
+          title: tr('Bối cảnh công việc', 'Work context'),
+          desc: tr(
+            'Đọc bản mô tả công việc (JD) hoặc hồ sơ năng lực (CV) bạn tải lên để hiểu vai trò của bạn.',
+            'Read the job description (JD) or resume (CV) you upload to understand your role.',
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          wrKeepCompounds(tr(
+            'Bốn phần này gửi nội dung tới DeepSeek, một mô hình ngôn ngữ của bên thứ ba.',
+            'These four parts send content to DeepSeek, a third-party language model.',
+          )),
+          style: const TextStyle(
+            fontSize: 13,
+            color: WrColors.muted,
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: WrColors.teal.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: WrColors.teal.withValues(alpha: 0.15)),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                wrKeepCompounds(tr('ĐIỀU BẠN NÊN BIẾT', 'WHAT YOU SHOULD KNOW')),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                  color: WrColors.pillTealText,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _PeaceOfMindRow(
+                title: tr('Nội dung được gửi', 'What is sent'),
+                desc: tr(
+                  'Thông tin bạn viết trong các lần nhìn lại và JD/CV. Họ tên, email, số điện thoại, địa chỉ và các dòng liên lạc cá nhân đều được xoá tự động trước khi gửi.',
+                  'Information from your look-backs, JD, or CV. Names, emails, phone numbers, addresses, and contacts are automatically removed before sending.',
+                ),
+              ),
+              const SizedBox(height: 10),
+              _PeaceOfMindRow(
+                title: tr('Bạn luôn là người quyết định', 'You always decide'),
+                desc: tr(
+                  'Mỗi điều AI đọc ra chỉ là một gợi ý. Bạn có thể đồng ý, không đồng ý, hoặc viết lại cho đúng ý mình. Phần bạn viết lại là phần duy nhất được lưu.',
+                  'Everything the AI reads is just a suggestion. You can agree, disagree, or rewrite it. Only what you rewrite is saved.',
+                ),
+              ),
+              const SizedBox(height: 10),
+              _PeaceOfMindRow(
+                title: tr('Bật tắt lúc nào cũng được', 'Switch on or off anytime'),
+                desc: tr(
+                  'Bạn có thể thay đổi trong Cài đặt tài khoản bất kỳ lúc nào.',
+                  'You can change this in Account Settings at any time.',
+                ),
+              ),
+              const SizedBox(height: 10),
+              _PeaceOfMindRow(
+                title: tr('Nếu bạn không chọn tính năng AI', 'If you do not choose AI'),
+                desc: tr(
+                  'Chỉ bốn phần kể trên tạm nghỉ, toàn bộ các tính năng khác của WorkReflection vẫn chạy đủ.',
+                  'Only the four parts above pause; all other features of WorkReflection continue working fully.',
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 22),
 
         _SectionTitle(
-          tr('APP GỬI GÌ, KHI NÀO', 'WHAT THE APP SENDS, AND WHEN'),
+          tr('CHI TIẾT CÁC LUỒNG DỮ LIỆU', 'DETAILED DATA FLOWS'),
         ),
         const SizedBox(height: 8),
         for (final flow in kWrAiDataFlows) ...[
@@ -453,3 +556,91 @@ class _RecipientRow extends StatelessWidget {
     );
   }
 }
+
+class _OverviewFeatureCard extends StatelessWidget {
+  const _OverviewFeatureCard({required this.title, required this.desc});
+  final String title;
+  final String desc;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: WrColors.line),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            wrKeepCompounds(title),
+            style: const TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: WrColors.navy,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            wrKeepCompounds(desc),
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: WrColors.muted,
+              height: 1.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PeaceOfMindRow extends StatelessWidget {
+  const _PeaceOfMindRow({required this.title, required this.desc});
+  final String title;
+  final String desc;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              size: 15,
+              color: WrColors.pillTealText,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                wrKeepCompounds(title),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.navy,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        Padding(
+          padding: const EdgeInsets.only(left: 21),
+          child: Text(
+            wrKeepCompounds(desc),
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: WrColors.navy,
+              height: 1.5,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+

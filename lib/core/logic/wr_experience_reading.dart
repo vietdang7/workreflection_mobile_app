@@ -517,12 +517,12 @@ String surveyLead(Map<String, dynamic> answers) {
   if (nDown == 0) {
     if (nMid == 0) {
       return tr(
-        'Trong mười lăm điều kiện quanh bạn, cả mười lăm điều đang nâng đỡ bạn.',
+        'Trong 15 điều kiện quanh bạn, cả 15 điều đang nâng đỡ bạn.',
         'Of the fifteen conditions around you, all fifteen are supporting you.',
       );
     }
     return tr(
-      'Trong mười lăm điều kiện quanh bạn, chưa có điều nào đang cản trở rõ. '
+      'Trong 15 điều kiện quanh bạn, chưa có điều nào đang cản trở rõ. '
           '$nUp điều đang nâng đỡ, phần còn lại còn thất thường.',
       'Of the fifteen conditions around you, none is clearly holding you '
           'back. $nUp are supporting you, the rest are still uneven.',
@@ -537,14 +537,14 @@ String surveyLead(Map<String, dynamic> answers) {
   ];
   return worst.length == 1
       ? tr(
-          'Trong mười lăm điều kiện quanh bạn, $nDown điều đang cản trở và $nUp '
+          'Trong 15 điều kiện quanh bạn, $nDown điều đang cản trở và $nUp '
               'điều đang nâng đỡ. Phần đang cản trở tập trung ở ${worst.single}.',
           'Of the fifteen conditions around you, $nDown are holding you back '
               'and $nUp are supporting you. What holds you back sits mostly in '
               '${worst.single}.',
         )
       : tr(
-          'Trong mười lăm điều kiện quanh bạn, $nDown điều đang cản trở và $nUp '
+          'Trong 15 điều kiện quanh bạn, $nDown điều đang cản trở và $nUp '
               'điều đang nâng đỡ. Phần đang cản trở nằm ở ${_joinAnd(worst)}.',
           'Of the fifteen conditions around you, $nDown are holding you back '
               'and $nUp are supporting you. What holds you back sits in '

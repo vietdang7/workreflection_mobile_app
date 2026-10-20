@@ -23,18 +23,27 @@ import '../../../core/widgets/wr_link_row.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Nhãn chương trình — dùng chung cho thẻ ở tab Phát triển và màn danh sách.
-///
-/// Họp khách 14/10: đổi "Thư viện học tập" thành tên chuỗi.
 String get kLearningLibraryLabel => tr(
-  'Chuỗi series Tâm thế người đi làm',
-  'Work Mindset Series',
+  'Tâm thế người đi làm',
+  'Workplace Mindset',
 );
 
-/// Câu giới thiệu chuỗi — dùng ở thẻ tab Phát triển và đầu màn danh sách.
+/// Câu giới thiệu chuỗi — dùng ở thẻ tab Phát triển.
 String get kLearningLibraryIntro => tr(
-  // Vừa hai dòng của thẻ ở tab Phát triển (thẻ cố định hai dòng mô tả).
-  'Góc nhìn, tâm thế và cách ứng xử trước tình huống thực tế nơi công sở.',
+  'Các góc nhìn, tâm thế và cách ứng xử trước những tình huống thực tế nơi công sở.',
   'Perspectives, mindset, and practical responses in the workplace.',
+);
+
+/// Dòng thông tin phụ của thẻ Tâm thế người đi làm.
+String get kLearningLibraryMeta => tr(
+  '1 tập đã đăng · mỗi tập khoảng 9\u00A0phút',
+  '1 episode published · about 9\u00A0minutes each',
+);
+
+/// Giới thiệu đầu màn hình chi tiết Tâm thế người đi làm (script `screenTamThe`).
+String get kTamTheScreenIntro => tr(
+  'Mỗi tập là một tình huống có thật ở nơi làm việc, nhìn từ phía bạn và từ phía những người còn lại.',
+  'Each episode is a real workplace situation, seen from your perspective and from those around you.',
 );
 
 /// Mở một tài liệu: video YouTube thì phát trong app, còn lại mở link ngoài.
@@ -59,15 +68,15 @@ class WrLearningLibraryScreen extends ConsumerWidget {
     final async = ref.watch(wrLearningResourcesProvider);
 
     return WrDetailScaffold(
-      art: WrHeroArt.act,
-      eyebrow: tr('HỌC MỌI LÚC', 'LEARN ANYTIME'),
+      art: WrHeroArt.understand,
+      eyebrow: tr('Mở rộng · YouTube', 'Expand · YouTube'),
       title: kLearningLibraryLabel,
       children: [
         Text(
-          wrKeepCompounds(kLearningLibraryIntro),
-          style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.6),
+          wrKeepWords(kTamTheScreenIntro),
+          style: const TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.6),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 16),
         ...async.when(
           loading: () => const [
             Padding(
@@ -97,14 +106,146 @@ class WrLearningLibraryScreen extends ConsumerWidget {
                   ),
                 ]
               : [
-                  for (final item in items)
+                  for (var i = 0; i < items.length; i++)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: WrCard.kGap),
-                      child: _ResourceCard(resource: item),
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _TamTheEpisodeCard(
+                        key: Key('wr_learning_resource_${items[i].id}'),
+                        episodeNumber: i + 1,
+                        duration: items[i].durationLabel ?? tr('9 phút', '9 min'),
+                        title: items[i].title,
+                        imageUrl: items[i].displayImageUrl,
+                        onTap: () => openLearningResource(context, items[i]),
+                      ),
                     ),
                 ],
         ),
       ],
+    );
+  }
+}
+
+String cleanEpisodeTitle(String raw) {
+  if (raw.contains('||')) {
+    final parts = raw.split('||');
+    if (parts.length > 1) {
+      var right = parts[1].trim();
+      right = right
+          .replaceAll(RegExp(r'^Chủ đề\s*[:\s]*', caseSensitive: false), '')
+          .trim();
+      right = right.replaceAll(RegExp(r'^"|"$'), '').trim();
+      if (right.isNotEmpty) return right;
+    }
+  }
+  return raw.replaceAll(RegExp(r'^"|"$'), '').trim();
+}
+
+class _TamTheEpisodeCard extends StatelessWidget {
+  const _TamTheEpisodeCard({
+    super.key,
+    required this.episodeNumber,
+    required this.duration,
+    required this.title,
+    this.imageUrl,
+    required this.onTap,
+  });
+
+  final int episodeNumber;
+  final String duration;
+  final String title;
+  final String? imageUrl;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return WrCard(
+      padding: EdgeInsets.zero,
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 120,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (imageUrl != null && imageUrl!.isNotEmpty)
+                  Image.network(
+                    imageUrl!,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    excludeFromSemantics: true,
+                    errorBuilder: (_, __, ___) => Image.asset(
+                      'assets/images/hero/bg_hieu.webp',
+                      fit: BoxFit.cover,
+                      alignment: const Alignment(0.0, -0.16),
+                      excludeFromSemantics: true,
+                    ),
+                  )
+                else
+                  Image.asset(
+                    'assets/images/hero/bg_hieu.webp',
+                    fit: BoxFit.cover,
+                    alignment: const Alignment(0.0, -0.16),
+                    excludeFromSemantics: true,
+                  ),
+                Positioned(
+                  left: 12,
+                  top: 11,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.93),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Text(
+                      wrKeepCompounds(
+                        tr('TẬP $episodeNumber · $duration', 'EPISODE $episodeNumber · $duration')
+                            .toUpperCase(),
+                      ),
+                      style: const TextStyle(
+                        color: WrColors.navy,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 12,
+                  bottom: 11,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: const BoxDecoration(
+                      color: WrColors.coral,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow_rounded,
+                      color: WrColors.navy,
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 13, 15, 14),
+            child: Text(
+              wrKeepCompounds(title),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: WrColors.navy,
+                height: 1.38,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -181,161 +322,7 @@ LearningTone learningTone(String? category) {
   };
 }
 
-/// Một tài liệu trong danh sách.
-///
-/// Người dùng 10/10 qua ba vòng: bỏ ảnh bìa ("mất công canh ảnh khi upload"),
-/// bỏ mô tả dài ("nhiều chữ, khó đọc"), rồi bản chỉ-tiêu-đề lại "cơ bản quá" —
-/// muốn có màu và thông tin kèm cho rõ. Nên: một ô màu bên trái (dấu phát +
-/// thời lượng) thay chỗ ảnh, bên phải là nhãn danh mục, tiêu đề, và MỘT hàng
-/// thông tin ngắn có biểu tượng. Mô tả vẫn chỉ ở màn xem video.
-class _ResourceCard extends StatelessWidget {
-  const _ResourceCard({required this.resource});
 
-  final LearningResource resource;
-
-  @override
-  Widget build(BuildContext context) {
-    final tone = learningTone(resource.category);
-    final added = resource.createdAt?.toLocal();
-
-    return WrCard(
-      key: Key('wr_learning_resource_${resource.id}'),
-      padding: EdgeInsets.zero,
-      onTap: () => openLearningResource(context, resource),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Ô màu: dấu phát + thời lượng ──────────────────────────────
-            Container(
-              width: 78,
-              color: tone.tile,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: tone.markBg,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      resource.isVideo
-                          ? Icons.play_arrow_rounded
-                          : Icons.menu_book_rounded,
-                      size: resource.isVideo ? 26 : 20,
-                      color: tone.markIcon,
-                    ),
-                  ),
-                  if (resource.durationLabel != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      wrKeepCompounds(resource.durationLabel!),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: tone.onTile,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            // ── Chữ ────────────────────────────────────────────────────────
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (resource.category != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: tone.chipBg,
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: Text(
-                          wrKeepCompounds(resource.category!),
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.3,
-                            color: tone.chipFg,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                    ],
-                    Text(
-                      wrKeepCompounds(resource.title),
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
-                        height: 1.38,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 4,
-                      children: [
-                        _MetaItem(
-                          icon: resource.isVideo
-                              ? Icons.smart_display_outlined
-                              : Icons.description_outlined,
-                          label: resource.kindLabel,
-                        ),
-                        if (added != null)
-                          _MetaItem(
-                            key: const Key('wr_learning_added'),
-                            icon: Icons.event_outlined,
-                            label: tr(
-                              'Đăng ${added.day}/${added.month}/${added.year}',
-                              'Added ${added.day}/${added.month}/${added.year}',
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MetaItem extends StatelessWidget {
-  const _MetaItem({super.key, required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 15, color: WrColors.muted),
-        const SizedBox(width: 4),
-        Text(wrKeepCompounds(label), style: TextStyle(fontSize: 13, color: WrColors.muted)),
-      ],
-    );
-  }
-}
 
 /// Dấu tròn coral thay cho ảnh bìa: nút phát cho video, mũi tên ra ngoài cho
 /// tài liệu khác. Nút coral chữ navy — quy ước nút chính của app.

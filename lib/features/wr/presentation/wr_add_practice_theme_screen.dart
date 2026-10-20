@@ -2,8 +2,13 @@
 //
 // Bốn câu, đúng bốn câu của mockup (khách 06/10: không hỏi thêm gì ngoài
 // script). Ba câu đầu bắt buộc, "Đã thử" thì không. Bấm "Tạo chủ đề" là ghi
-// chủ đề + bốn bước (`buildUserPracticeSteps`) + ba cách
-// (`buildUserThemeMentorOptions`), ghi danh luôn rồi mở màn chủ đề vừa tạo.
+// chủ đề + bốn bước (`buildUserPracticeSteps`) + ba cách, ghi danh luôn rồi mở
+// màn chủ đề vừa tạo.
+//
+// Ba cách theo mô hình Hybrid (20/10/2026): có quyền AI thì hỏi
+// `wr-practice-suggest` (chờ tối đa 12 giây), gợi ý đi qua
+// `mergeAiMentorOptions`; không có gì dùng được thì là bộ luật
+// `buildUserThemeMentorOptions`. Tạo chủ đề không bao giờ hỏng vì AI.
 
 import 'dart:math';
 
@@ -12,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_intelligence_repository.dart';
+import '../../../core/data/wr_practice_suggest_repository.dart';
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_flow_error.dart';
 import '../../../core/logic/wr_practice_v47.dart';
@@ -19,6 +25,7 @@ import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_back_circle.dart';
+import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_voice_field.dart';
@@ -41,6 +48,9 @@ class _WrAddPracticeThemeScreenState
   final _goal = TextEditingController();
   final _tried = TextEditingController();
   bool _busy = false;
+
+  /// Đang chờ AI gợi ý — nút đổi sang "Đang phân tích tình huống của bạn...".
+  bool _thinking = false;
   String? _error;
 
   @override
@@ -96,15 +106,37 @@ class _WrAddPracticeThemeScreenState
       goal: _goal.text.trim(),
       tried: _tried.text.trim().isEmpty ? null : _tried.text.trim(),
     );
+    final title = _name.text.trim();
+    // Đã từ chối AI thì `ensureAiConsent` trả false mà không hỏi lại; chủ đề
+    // vẫn tạo bằng bộ luật.
+    var ai = const PracticeAiSuggestion.none();
+    var allowAi = false;
+    try {
+      allowAi = await ensureAiConsent(context, ref);
+    } catch (_) {
+      // Đọc quyền AI hỏng = coi như chưa cho phép (quy ước 07/09); không được
+      // để nút kẹt ở trạng thái đang chạy.
+    }
+    if (allowAi) {
+      if (!mounted) return;
+      setState(() => _thinking = true);
+      ai = await ref
+          .read(wrPracticeSuggestRepositoryProvider)
+          .suggest(title: title, intake: intake);
+      if (!mounted) return;
+      setState(() => _thinking = false);
+    }
+    if (!mounted) return;
     final themeId = _newThemeId();
     final theme = PracticeTheme(
       themeId: themeId,
-      title: _name.text.trim(),
+      title: title,
       source: PracticeThemeSource.user,
       ownerId: userId,
       intake: intake,
-      mentorOptions: buildUserThemeMentorOptions(
-        intake.goal,
+      mentorOptions: mergeAiMentorOptions(
+        ai: ai.options,
+        goal: intake.goal,
         tried: intake.tried,
       ),
     );
@@ -114,7 +146,11 @@ class _WrAddPracticeThemeScreenState
           .createUserTheme(
             userId: userId,
             theme: theme,
-            steps: buildUserPracticeSteps(themeId: themeId, intake: intake),
+            steps: buildUserPracticeSteps(
+              themeId: themeId,
+              intake: intake,
+              aiQuestion: ai.question,
+            ),
           );
       ref.invalidate(practiceThemesProvider);
       ref.invalidate(practiceEnrollmentsProvider);
@@ -134,7 +170,12 @@ class _WrAddPracticeThemeScreenState
         );
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _thinking = false;
+        });
+      }
     }
   }
 
@@ -188,14 +229,16 @@ class _WrAddPracticeThemeScreenState
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      wrKeepCompounds(tr(
-                        'Không cần gọi tên thật chính xác. Chỉ cần kể đủ để hệ '
-                            'thống hiểu bạn đang gặp chuyện gì và muốn điều gì '
-                            'khác đi.',
-                        'No need to name it exactly. Just say enough for the app '
-                            'to understand what is happening and what you want '
-                            'to change.',
-                      )),
+                      wrKeepCompounds(
+                        tr(
+                          'Không cần gọi tên thật chính xác. Chỉ cần kể đủ để hệ '
+                              'thống hiểu bạn đang gặp chuyện gì và muốn điều gì '
+                              'khác đi.',
+                          'No need to name it exactly. Just say enough for the app '
+                              'to understand what is happening and what you want '
+                              'to change.',
+                        ),
+                      ),
                       style: _muted,
                     ),
                   ],
@@ -322,19 +365,45 @@ class _WrAddPracticeThemeScreenState
                         ),
                       ),
                       child: _busy
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: WrColors.navy,
-                              ),
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: WrColors.navy,
+                                  ),
+                                ),
+                                if (_thinking) ...[
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: Text(
+                                      wrKeepCompounds(
+                                        tr(
+                                          'Đang phân tích tình huống của bạn...',
+                                          'Reading your situation...',
+                                        ),
+                                      ),
+                                      key: const Key('wr_add_theme_thinking'),
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: WrColors.navy,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             )
                           : Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  wrKeepCompounds(tr('Tạo chủ đề', 'Create theme')),
+                                  wrKeepCompounds(
+                                    tr('Tạo chủ đề', 'Create theme'),
+                                  ),
                                   style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,

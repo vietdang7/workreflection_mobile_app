@@ -17,9 +17,11 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -92,6 +94,9 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
   late bool _muted = widget.startMuted;
   bool _ended = false;
 
+  VideoPlayerController? _videoController;
+  bool _useVideo = false;
+
   ProviderSubscription<VideoAudioController>? _audioSub;
   VideoAudioController? _audio;
   StreamSubscription<Duration>? _audioPosSub;
@@ -109,7 +114,61 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
     _prepare();
   }
 
+  static int _sceneStartTime(IntroSceneId id) => switch (id) {
+    IntroSceneId.welcome => 0,
+    IntroSceneId.reflect => 28,
+    IntroSceneId.understand => 65,
+    IntroSceneId.grow => 87,
+    IntroSceneId.assistant => 123,
+    IntroSceneId.closing => 154,
+  };
+
   Future<void> _prepare() async {
+    final isTest = Platform.environment.containsKey('FLUTTER_TEST');
+    if (!isTest) {
+      try {
+        final ctl = VideoPlayerController.asset('assets/intro/hdsd.mp4');
+        await ctl.initialize().timeout(const Duration(seconds: 5));
+        if (_disposed) {
+          await ctl.dispose();
+          return;
+        }
+        _videoController = ctl;
+        _useVideo = true;
+        _videoController!.addListener(_onVideoTick);
+        if (_muted) {
+          await _videoController!.setVolume(0);
+        }
+        if (widget.startScene != null) {
+          final seekSec = _sceneStartTime(widget.startScene!);
+          if (seekSec > 0) {
+            await _videoController!.seekTo(Duration(seconds: seekSec));
+          }
+        }
+        if (mounted) {
+          setState(() => _phase = _Phase.ready);
+          if (widget.autoplay) _play();
+        }
+        return;
+      } catch (_) {
+        // Fall back to timeline if video controller fails or file missing
+      }
+    }
+    await _prepareTimeline();
+  }
+
+  void _onVideoTick() {
+    if (_disposed || !mounted || _videoController == null) return;
+    final v = _videoController!.value;
+    if (v.position >= v.duration && v.duration > Duration.zero) {
+      if (!_ended) setState(() => _ended = true);
+    } else if (_ended && v.isPlaying) {
+      setState(() => _ended = false);
+    }
+    setState(() {});
+  }
+
+  Future<void> _prepareTimeline() async {
     final lang = wrEnglish ? 'en' : 'vi';
     Map<String, dynamic>? recorded;
     try {
@@ -165,6 +224,17 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
   // ---- Điều khiển ----------------------------------------------------------
 
   void _play() {
+    if (_useVideo && _videoController != null) {
+      final pos = _videoController!.value.position;
+      final dur = _videoController!.value.duration;
+      if (_ended || (dur > Duration.zero && pos >= dur)) {
+        _videoController!.seekTo(Duration.zero);
+        _ended = false;
+      }
+      _videoController!.play();
+      setState(() {});
+      return;
+    }
     if (_ended || _clock.value >= 1) {
       _clock.value = 0;
       _ended = false;
@@ -175,6 +245,11 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
   }
 
   void _pause() {
+    if (_useVideo && _videoController != null) {
+      _videoController!.pause();
+      setState(() {});
+      return;
+    }
     _clock.stop();
     _audio?.pause();
     setState(() {});
@@ -182,6 +257,10 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
 
   void _toggleMute() {
     setState(() => _muted = !_muted);
+    if (_useVideo && _videoController != null) {
+      _videoController!.setVolume(_muted ? 0.0 : 1.0);
+      return;
+    }
     if (_muted) {
       _audio?.pause();
     } else if (_clock.isAnimating) {
@@ -224,6 +303,8 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
   @override
   void dispose() {
     _disposed = true;
+    _videoController?.removeListener(_onVideoTick);
+    _videoController?.dispose();
     _audioPosSub?.cancel();
     _audio?.pause();
     // Đóng subscription thì provider autoDispose tự huỷ controller, đúng một
@@ -252,7 +333,10 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                     child: Center(
                       child: AspectRatio(
-                        aspectRatio: 9 / 16,
+                        aspectRatio: _useVideo &&
+                                _videoController!.value.aspectRatio > 0
+                            ? _videoController!.value.aspectRatio
+                            : (9 / 16),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(24),
                           child: _stage(),
@@ -271,7 +355,8 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
   }
 
   Widget _topBar() {
-    final showMute = _phase == _Phase.ready && _timeline?.audioAsset != null;
+    final showMute = _phase == _Phase.ready &&
+        (_useVideo || _timeline?.audioAsset != null);
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 4, 12, 0),
       child: Row(
@@ -360,6 +445,45 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
           ),
         );
       case _Phase.ready:
+        if (_useVideo &&
+            _videoController != null &&
+            _videoController!.value.isInitialized) {
+          final vpc = _videoController!;
+          final isPlaying = vpc.value.isPlaying;
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: isPlaying ? _pause : _play,
+            child: Stack(
+              fit: StackFit.expand,
+              alignment: Alignment.center,
+              children: [
+                Center(
+                  child: AspectRatio(
+                    aspectRatio: vpc.value.aspectRatio > 0
+                        ? vpc.value.aspectRatio
+                        : (9 / 16),
+                    child: VideoPlayer(vpc),
+                  ),
+                ),
+                if (!isPlaying && !_ended)
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: Color(0x66000000),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.play_arrow_rounded,
+                        size: 52,
+                        color: WrColors.white,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }
         final timeline = _timeline!;
         return AnimatedBuilder(
           animation: _clock,
@@ -388,7 +512,9 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
 
   Widget _bottomBar() {
     final ready = _phase == _Phase.ready;
-    final playing = _clock.isAnimating;
+    final playing = _useVideo
+        ? (_videoController?.value.isPlaying ?? false)
+        : _clock.isAnimating;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Row(
@@ -411,16 +537,75 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: AnimatedBuilder(
-              animation: _clock,
-              builder: (context, _) => _SceneProgress(
-                timeline: _timeline,
-                positionMs: ready ? _posMs : 0,
-              ),
-            ),
+            child: _useVideo &&
+                    _videoController != null &&
+                    _videoController!.value.isInitialized
+                ? _VideoProgressBar(controller: _videoController!)
+                : AnimatedBuilder(
+                    animation: _clock,
+                    builder: (context, _) => _SceneProgress(
+                      timeline: _timeline,
+                      positionMs: ready ? _posMs : 0,
+                    ),
+                  ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Thanh tiến độ cho video MP4 thật.
+class _VideoProgressBar extends StatelessWidget {
+  const _VideoProgressBar({required this.controller});
+
+  final VideoPlayerController controller;
+
+  String _format(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pos = controller.value.position;
+    final dur = controller.value.duration;
+    final ratio = dur.inMilliseconds > 0
+        ? (pos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
+        : 0.0;
+
+    return Row(
+      children: [
+        Expanded(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 4,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+              activeTrackColor: WrColors.coral,
+              inactiveTrackColor: WrColors.white.withValues(alpha: 0.25),
+              thumbColor: WrColors.coral,
+            ),
+            child: Slider(
+              value: ratio,
+              onChanged: (val) {
+                final targetMs = (val * dur.inMilliseconds).round();
+                controller.seekTo(Duration(milliseconds: targetMs));
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '${_format(pos)} / ${_format(dur)}',
+          style: const TextStyle(
+            color: WrColors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

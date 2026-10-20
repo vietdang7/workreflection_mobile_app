@@ -8,9 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:workreflection_mobile/core/data/wr_ai_consent_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_practice_suggest_repository.dart';
+import 'package:workreflection_mobile/core/logic/wr_ai_disclosure.dart';
 import 'package:workreflection_mobile/core/logic/wr_career_memory_rules.dart';
 import 'package:workreflection_mobile/core/logic/wr_practice_v47.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
@@ -20,6 +23,7 @@ import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.
 import 'package:workreflection_mobile/features/wr/presentation/wr_learning_capture_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_practice_theme_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_step_options_screen.dart';
+import 'package:workreflection_mobile/features/wr/ai_consent_providers.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
@@ -92,14 +96,48 @@ GoRouter _router(String initial) => GoRouter(
   ],
 );
 
+/// Gợi ý AI giả: trả đúng [result], ghi lại mỗi lần được gọi.
+class _FakeSuggest implements WrPracticeSuggestRepository {
+  _FakeSuggest([this.result = const PracticeAiSuggestion.none()]);
+
+  final PracticeAiSuggestion result;
+  final calls = <PracticeIntake>[];
+
+  @override
+  Future<PracticeAiSuggestion> suggest({
+    required String title,
+    required PracticeIntake intake,
+  }) async {
+    calls.add(intake);
+    return result;
+  }
+}
+
+/// Mặc định: người dùng đã TỪ CHỐI AI — tạo chủ đề đi đường bộ luật, đúng như
+/// trước khi có lớp AI.
+final _declined = WrAiConsent(
+  version: kWrAiDisclosureVersion,
+  revokedAt: DateTime(2026, 10, 1),
+);
+final _granted = WrAiConsent(
+  version: kWrAiDisclosureVersion,
+  grantedAt: DateTime(2026, 10, 1),
+);
+
 Widget _wrap(
   GoRouter router, {
   FakeWrIntelligenceRepository? intel,
   FakeWrContentRepository? content,
   FakeWrEpisodeRepository? episodes,
+  WrAiConsent? consent,
+  WrPracticeSuggestRepository? suggest,
 }) {
   return ProviderScope(
     overrides: [
+      wrAiConsentProvider.overrideWith((ref) async => consent ?? _declined),
+      wrPracticeSuggestRepositoryProvider.overrideWithValue(
+        suggest ?? _FakeSuggest(),
+      ),
       wrIntelligenceRepositoryProvider.overrideWithValue(
         intel ?? FakeWrIntelligenceRepository(),
       ),
@@ -299,9 +337,7 @@ void main() {
     });
 
     testWidgets('họp 08/10 + script: bỏ "Ghi nhận một điều", dòng thêm chủ '
-        'đề theo chữ script', (
-      tester,
-    ) async {
+        'đề theo chữ script', (tester) async {
       await _pumpTall(tester, _wrap(_router('/wr/growth')));
 
       expect(find.byKey(const Key('wr_growth_learning_card')), findsNothing);
@@ -549,6 +585,98 @@ void main() {
       // ba cách gợi ý ở trên đã tránh nó.
       expect(call.steps[2].content, isNot(contains('đừng lặp lại')));
       expect(call.steps[2].content, startsWith('Mở phần gợi ý, chọn một cách'));
+    });
+
+    Future<void> fillAndCreate(WidgetTester tester) async {
+      await tester.enterText(find.byKey(const Key('wr_add_theme_name')), 'A');
+      await tester.enterText(
+        find.byKey(const Key('wr_add_theme_situation')),
+        'B',
+      );
+      await tester.enterText(find.byKey(const Key('wr_add_theme_goal')), 'C');
+      await tester.enterText(
+        find.byKey(const Key('wr_add_theme_tried')),
+        'Im lặng chờ',
+      );
+      await tester.pump();
+      await _tap(tester, find.byKey(const Key('wr_add_theme_create')));
+    }
+
+    testWidgets(
+      'đã cho phép AI: ba cách AI qua đối soát + câu hỏi vào bước 4',
+      (tester) async {
+        final intel = FakeWrIntelligenceRepository();
+        final suggest = _FakeSuggest(
+          PracticeAiSuggestion.fromJson({
+            'generated': true,
+            'locale': 'vi',
+            'options': [
+              {
+                'title': 'Im lặng chờ thêm lần nữa',
+                'fit': 'f',
+                'tradeoff': 't',
+              },
+              {'title': 'Xin hai phút cuối họp', 'fit': 'f', 'tradeoff': 't'},
+              {'title': 'Gửi ghi chú trước', 'fit': 'f', 'tradeoff': 't'},
+            ],
+            'question': 'Điều gì giúp bạn nói trọn ý?',
+          }),
+        );
+        await _pumpTall(
+          tester,
+          _wrap(
+            _router('/wr/growth/add-theme'),
+            intel: intel,
+            consent: _granted,
+            suggest: suggest,
+          ),
+        );
+        await fillAndCreate(tester);
+
+        expect(suggest.calls.single.tried, 'Im lặng chờ');
+        final call = intel.createUserThemeCalls.single;
+        final titles = call.theme.mentorOptions.map((o) => o.titleVi).toList();
+        // Cách lặp lại điều đã thử bị loại; chỗ trống lấy từ bộ luật.
+        expect(titles, hasLength(3));
+        expect(titles.take(2), ['Xin hai phút cuối họp', 'Gửi ghi chú trước']);
+        expect(titles, isNot(contains('Im lặng chờ thêm lần nữa')));
+        expect(call.steps[3].content, contains('Điều gì giúp bạn nói trọn ý?'));
+      },
+    );
+
+    testWidgets('đã cho phép AI nhưng AI không trả gì: vẫn tạo bằng bộ luật', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository();
+      final suggest = _FakeSuggest();
+      await _pumpTall(
+        tester,
+        _wrap(
+          _router('/wr/growth/add-theme'),
+          intel: intel,
+          consent: _granted,
+          suggest: suggest,
+        ),
+      );
+      await fillAndCreate(tester);
+
+      expect(suggest.calls, hasLength(1));
+      final call = intel.createUserThemeCalls.single;
+      expect(
+        call.theme.mentorOptions.map((o) => o.id),
+        buildUserThemeMentorOptions('C', tried: 'Im lặng chờ').map((o) => o.id),
+      );
+      expect(call.steps[3].content, isNot(contains('Gợi ý:')));
+    });
+
+    testWidgets('đã từ chối AI: không gọi AI', (tester) async {
+      final suggest = _FakeSuggest();
+      await _pumpTall(
+        tester,
+        _wrap(_router('/wr/growth/add-theme'), suggest: suggest),
+      );
+      await fillAndCreate(tester);
+      expect(suggest.calls, isEmpty);
     });
   });
 

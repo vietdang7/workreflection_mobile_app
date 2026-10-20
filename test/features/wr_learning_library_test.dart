@@ -148,6 +148,22 @@ void main() {
       expect(_pdf.kindLabel, 'Reading');
     });
 
+    test('ảnh bìa: ưu tiên thumbnail_url, sau đó là YouTube, không có thì null', () {
+      expect(
+        _series.displayImageUrl,
+        'https://img.youtube.com/vi/iKs4vZjT7rs/hqdefault.jpg',
+      );
+      expect(_pdf.displayImageUrl, isNull);
+
+      final withThumb = LearningResource.fromJson({
+        'id': 't1',
+        'title': 'Test',
+        'thumbnail_url': 'https://cdn.example/custom.jpg',
+        'external_url': 'https://youtu.be/iKs4vZjT7rs',
+      });
+      expect(withThumb.displayImageUrl, 'https://cdn.example/custom.jpg');
+    });
+
     test('ô chữ rỗng của web đọc thành null, không ra dòng trắng', () {
       final r = LearningResource.fromJson({
         'id': 'x',
@@ -207,7 +223,7 @@ void main() {
       await tester.ensureVisible(youtubeCard);
       await tester.pumpAndSettle();
       expect(find.text('MỞ RỘNG'), findsOneWidget);
-      expect(find.text('Chuỗi series Tâm thế người đi làm'), findsOneWidget);
+      expect(find.text('Tâm thế người đi làm'), findsOneWidget);
       expect(find.text(_series.title, skipOffstage: false), findsNothing);
       expect(find.text(_pdf.title, skipOffstage: false), findsNothing);
       expect(_networkImages, findsNothing);
@@ -233,7 +249,7 @@ void main() {
 
   group('Màn Thư viện học tập', () {
     testWidgets(
-      'mỗi tài liệu: ô màu, danh mục, tiêu đề, thông tin ngắn — không mô tả',
+      'mỗi tài liệu: ảnh bìa, nhãn tập/thời lượng, nút phát, tiêu đề',
       (tester) async {
         await tester.pumpWidget(
           _wrap(
@@ -245,13 +261,11 @@ void main() {
 
         expect(find.text(_series.title), findsOneWidget);
         expect(find.text(_pdf.title), findsOneWidget);
-        expect(find.text('Communication'), findsOneWidget);
-        expect(find.text('9 phút'), findsOneWidget);
-        expect(find.text('Đăng 24/9/2026'), findsOneWidget);
-        expect(find.text('Tài liệu'), findsOneWidget);
-        // Người dùng 10/10: mô tả dài làm danh sách "nhiều chữ, khó đọc".
+        expect(find.text('TẬP 1 · 9 PHÚT'), findsOneWidget);
+        // Người dùng: mô tả dài không hiển thị trên danh sách tập.
         expect(find.textContaining('hệ sinh của WorkReflection'), findsNothing);
-        expect(_networkImages, findsNothing);
+        // Tập video có ảnh thumbnail từ YouTube / mạng.
+        expect(_networkImages, findsOneWidget);
       },
     );
 

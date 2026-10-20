@@ -7,8 +7,11 @@
 // phần chủ đề người dùng tự thêm (`buildPracticeSteps`,
 // `buildUserThemeMentorOptions`) và bộ cách dự phòng (`getMentorOptions`).
 //
-// Lớp AI viết lại mô tả từng bước (lớp 3 trong mockup) chưa làm: bản theo luật
-// ở đây là lớp 2, luôn chạy được.
+// Mô hình Hybrid (PLAN_BAO_MAT_VA_AI_DEEPSEEK, 20/10/2026):
+//   • Lớp 1 — khung 4 bước bất biến (`buildUserPracticeSteps`).
+//   • Lớp 2 — bộ cách theo luật (`buildUserThemeMentorOptions`), luôn chạy được.
+//   • Lớp 3 — AI gợi ý (`wr-practice-suggest`) đi qua [mergeAiMentorOptions]:
+//     cách nào lặp lại điều đã thử thì bị loại, thiếu thì lấy từ lớp 2.
 //
 // Pure Dart → test được trực tiếp.
 
@@ -37,10 +40,16 @@ String practiceStepAction(String title) {
 ///
 /// Có câu "đã thử" thì bước "Chọn một cách" dặn thêm đừng lặp lại đúng điều đó
 /// (họp khách 05/10: không gợi ý lại cách đã thử mà không có kết quả).
+///
+/// [aiQuestion] là câu hỏi AI gợi ý (lớp 3); có thì bước 4 kèm nó làm gợi ý,
+/// không thì giữ câu mặc định.
 List<PracticeStep> buildUserPracticeSteps({
   required String themeId,
   required PracticeIntake intake,
+  String? aiQuestion,
 }) {
+  final q = aiQuestion?.trim();
+  final hasQ = q != null && q.isNotEmpty;
   // Script Sprint 2 `buildPracticeSteps`. Điều người dùng "đã thử" không nằm
   // trong mô tả bước nữa: ba cách gợi ý (`buildUserThemeMentorOptions`) đã
   // tránh lặp lại nó.
@@ -95,9 +104,14 @@ List<PracticeStep> buildUserPracticeSteps({
       stepOrder: 4,
       title: 'Câu hỏi cho lần sau: Điều bạn muốn hỏi lần tới',
       titleEn: 'A question for next time: What you want to ask next time',
-      content: 'Sau khi thử, bạn muốn mang theo câu hỏi nào cho lần sau?',
-      contentEn:
-          'After trying, what question do you want to carry into next time?',
+      content: hasQ
+          ? 'Sau khi thử, bạn muốn mang theo câu hỏi nào cho lần sau? '
+                'Gợi ý: "$q"'
+          : 'Sau khi thử, bạn muốn mang theo câu hỏi nào cho lần sau?',
+      contentEn: hasQ
+          ? 'After trying, what question do you want to carry into next '
+                'time? A suggestion: "$q"'
+          : 'After trying, what question do you want to carry into next time?',
       isPremium: true,
     ),
   ];
@@ -145,6 +159,102 @@ List<PracticeMentorOption> buildUserThemeMentorOptions(
   }
   return kept;
 }
+
+/// Gợi ý AI cho một chủ đề tự thêm (Edge Function `wr-practice-suggest`).
+class PracticeAiSuggestion {
+  const PracticeAiSuggestion({required this.options, this.question});
+
+  /// Chưa có gợi ý: hết lượt, tắt quyền AI, mất mạng, quá 12 giây...
+  const PracticeAiSuggestion.none() : options = const [], question = null;
+
+  final List<PracticeMentorOption> options;
+  final String? question;
+
+  bool get isEmpty => options.isEmpty;
+
+  /// Đọc câu trả lời của hàm. `generated: false` hay sai dạng đều thành
+  /// [PracticeAiSuggestion.none] — lớp 2 lo phần còn lại.
+  factory PracticeAiSuggestion.fromJson(Map<String, dynamic> json) {
+    if (json['generated'] != true) return const PracticeAiSuggestion.none();
+    final en = json['locale'] == 'en';
+    final raw = json['options'];
+    final options = <PracticeMentorOption>[];
+    if (raw is List) {
+      for (final o in raw) {
+        if (o is! Map) continue;
+        final title = (o['title'] as String?)?.trim() ?? '';
+        final fit = (o['fit'] as String?)?.trim() ?? '';
+        final tradeoff = (o['tradeoff'] as String?)?.trim() ?? '';
+        if (title.isEmpty || fit.isEmpty || tradeoff.isEmpty) continue;
+        // AI viết đúng một ngôn ngữ. Bản tiếng Anh ghi vào cả ô Việt để
+        // `trDb` luôn có chữ; bản tiếng Việt để trống ô Anh như chữ người dùng
+        // tự gõ.
+        options.add(
+          PracticeMentorOption(
+            id: 'ai-${options.length + 1}',
+            title: title,
+            titleEn: en ? title : null,
+            fit: fit,
+            fitEn: en ? fit : null,
+            tradeoff: tradeoff,
+            tradeoffEn: en ? tradeoff : null,
+          ),
+        );
+      }
+    }
+    final q = (json['question'] as String?)?.trim();
+    return PracticeAiSuggestion(
+      options: options,
+      question: (q == null || q.isEmpty) ? null : q,
+    );
+  }
+}
+
+/// Lớp 3 của mô hình Hybrid: đối soát gợi ý AI với điều đã thử.
+///
+/// Máy chủ đã dặn model "không gợi ý lại điều đã thử", nhưng lời dặn không phải
+/// lời hứa. Ở đây loại mọi cách AI đưa ra nhắc lại gần nguyên văn điều đã thử
+/// (≥ 70% chữ có nghĩa của điều đã thử có mặt trong TÊN cách). Không so phần
+/// "Phù hợp khi…": câu đó hay kể lại chính tình huống, so vào là loại nhầm.
+///
+/// KHÔNG dùng bộ hướng [kTriedOptionKeywords] như lớp 2: hướng "talk" bắt cả
+/// chữ "nói", nên đã thử "nói thẳng trong họp" sẽ loại oan cách "nói ý chính
+/// ngay câu đầu" — đúng loại gợi ý cụ thể mà người ta cần AI để có.
+///
+/// Còn thiếu thì bù bằng bộ cách theo luật (lớp 2), vẫn đủ ba thẻ. AI không có
+/// gì dùng được thì trả nguyên lớp 2.
+List<PracticeMentorOption> mergeAiMentorOptions({
+  required List<PracticeMentorOption> ai,
+  required String goal,
+  String? tried,
+}) {
+  final rules = buildUserThemeMentorOptions(goal, tried: tried);
+  final t = tried?.trim() ?? '';
+  final kept = <PracticeMentorOption>[
+    for (final o in ai)
+      if (t.isEmpty || !_aiRepeatsTried(o, t)) o,
+  ].take(3).toList();
+  for (final o in rules) {
+    if (kept.length >= 3) break;
+    kept.add(o);
+  }
+  return kept;
+}
+
+bool _aiRepeatsTried(PracticeMentorOption o, String tried) {
+  final norm = _normWords(tried);
+  if (norm.length < 2) return false;
+  final have = _normWords(o.titleVi).toSet();
+  final hits = norm.where(have.contains).length;
+  return hits / norm.length >= 0.7;
+}
+
+List<String> _normWords(String s) => s
+    .toLowerCase()
+    .replaceAll(RegExp(r'[^\p{L}\p{N}]+', unicode: true), ' ')
+    .split(' ')
+    .where((w) => w.length > 1)
+    .toList();
 
 const _talkOption = PracticeMentorOption(
   id: 'talk',

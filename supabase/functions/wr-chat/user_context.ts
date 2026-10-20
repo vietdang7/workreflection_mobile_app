@@ -50,6 +50,7 @@
 // khi đó lập tức trỏ sang một mục hoàn toàn khác. Xem đầu `system_prompt.ts`.
 
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import { loadPiiIdentity, redactPii } from '../_shared/pii_redact.ts';
 
 /// Cửa sổ recentSituationIds (v2.0 §4.1: tối đa 30 mục gần nhất).
 const RECENT_WINDOW = 30;
@@ -890,6 +891,10 @@ export async function buildUserContext(
 
   if (isPremium) {
     try {
+      // Bản lưu là bản GỐC (có tên, SĐT, email của CV). Khử PII ở đây, ngay
+      // trước khi nó vào prompt — cả cho tài liệu đọc từ trước ngày có bộ lọc,
+      // mà phần tóm tắt có thể còn gọi đích danh người dùng.
+      const identity = await loadPiiIdentity(db, userId);
       const { data } = await db
         .from('wr_context_documents')
         .select('doc_type, analysis_status, extracted_text, analysis, analyzed_at')
@@ -908,6 +913,8 @@ export async function buildUserContext(
       for (const d of ready.slice(0, 2)) {
         const a = (d.analysis ?? {}) as Record<string, unknown>;
         const name = docName(d.doc_type);
+        const isCv = String(d.doc_type ?? '').toLowerCase() !== 'jd';
+        const clean = (v: unknown) => redactPii(String(v ?? '').trim(), { isCv, identity });
         const parts: string[] = [];
 
         const title = String(a.title ?? '').trim();
@@ -915,7 +922,7 @@ export async function buildUserContext(
         if (title) parts.push(`chức danh: ${title}`);
         if (org) parts.push(`nơi làm việc: ${org}`);
 
-        const summary = String(a.summary ?? '').trim();
+        const summary = redactPii(String(a.summary ?? '').trim(), { identity });
         if (summary) parts.push(`tóm tắt: ${truncate(summary, 400)}`);
 
         const listOf = (key: string, label: string, max: number) => {
@@ -940,7 +947,7 @@ export async function buildUserContext(
         // Chữ nguyên văn, cắt ngắn. Có bản tóm tắt rồi vẫn cần đoạn này: người
         // dùng hay hỏi về một dòng cụ thể trong JD ("chỗ này nói gì"), mà bản
         // tóm tắt thì không giữ được câu chữ của họ.
-        const rawText = String(d.extracted_text ?? '').trim();
+        const rawText = clean(d.extracted_text);
         if (rawText) {
           lines.push(
             `Trích nguyên văn từ ${name} đó: "${truncate(rawText, 1500)}". `

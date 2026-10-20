@@ -8,12 +8,17 @@ import '../../../core/widgets/pill_button.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/data/seed_service.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../onboarding/onboarding_state.dart' show onboardingCheckinProvider;
 import '../../onboarding/presentation/wr_logo.dart';
+import '../../wr/presentation/wr_home_screen.dart'
+    show startReflectionFromCheckin;
 import '../data/auth_repository.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
-  const AuthScreen({super.key});
+  const AuthScreen({super.key, this.initialIsLogin});
+
+  final bool? initialIsLogin;
 
   @override
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
@@ -25,10 +30,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _passwordCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
 
-  bool _isLogin = true;
+  late bool _isLogin = widget.initialIsLogin ?? true;
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+
+  @override
+  void didUpdateWidget(covariant AuthScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialIsLogin != null &&
+        widget.initialIsLogin != oldWidget.initialIsLogin) {
+      setState(() {
+        _isLogin = widget.initialIsLogin!;
+        _errorMessage = null;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -62,7 +79,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       // the seed service is idempotent so double-calls are safe.
       await ref.read(seedServiceProvider).ensureSeeded();
       if (mounted) {
-        context.go(_isLogin ? '/home' : '/profile/setup');
+        final initialCheckin = ref.read(onboardingCheckinProvider);
+        if (initialCheckin != null) {
+          ref.read(onboardingCheckinProvider.notifier).state = null;
+          startReflectionFromCheckin(ref, initialCheckin);
+          context.go('/home');
+          await WidgetsBinding.instance.endOfFrame;
+          if (mounted) context.push('/wr/flow/step');
+        } else {
+          context.go(_isLogin ? '/home' : '/profile/setup');
+        }
       }
     } catch (e) {
       if (mounted) {

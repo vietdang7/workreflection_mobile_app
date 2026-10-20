@@ -532,13 +532,13 @@ void main() {
 
       expect(
         _textOf(tester, 'wr_exp_survey_lead'),
-        'Trong mười lăm điều kiện quanh bạn, 3 điều đang cản trở và 3 điều '
+        'Trong 15 điều kiện quanh bạn, 3 điều đang cản trở và 3 điều '
         'đang nâng đỡ. Phần đang cản trở tập trung ở Cách làm việc.',
       );
       expect(
         _textOf(tester, 'wr_exp_survey_date'),
         contains(
-          'Nguồn là mười lăm câu bạn đã trả lời, lần gần nhất ngày '
+          'Nguồn là 15 câu bạn đã trả lời, lần gần nhất ngày '
           '20/09/2026.',
         ),
       );

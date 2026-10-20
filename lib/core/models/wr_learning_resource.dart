@@ -34,6 +34,7 @@ class LearningResource {
     this.resourceType,
     this.externalUrl,
     this.fileUrl,
+    this.thumbnailUrl,
     this.durationMinutes,
     this.createdAt,
     this.tags = const [],
@@ -48,6 +49,7 @@ class LearningResource {
         resourceType: _blankToNull(json['resource_type']),
         externalUrl: _blankToNull(json['external_url']),
         fileUrl: _blankToNull(json['file_url']),
+        thumbnailUrl: _blankToNull(json['thumbnail_url']),
         durationMinutes: (json['duration_minutes'] as num?)?.toInt(),
         createdAt: json['created_at'] == null
             ? null
@@ -67,6 +69,7 @@ class LearningResource {
   final String? resourceType;
   final String? externalUrl;
   final String? fileUrl;
+  final String? thumbnailUrl;
   final int? durationMinutes;
   final DateTime? createdAt;
 
@@ -84,6 +87,19 @@ class LearningResource {
 
   /// Mã video YouTube nếu link là YouTube — có mã thì phát trong app.
   String? get youtubeId => youtubeVideoId(url);
+
+  /// Ảnh đại diện của tài liệu / video: lấy thumbnail_url nếu có,
+  /// nếu không có mà là video YouTube thì lấy ảnh bìa YouTube tương ứng.
+  String? get displayImageUrl {
+    if (thumbnailUrl != null && thumbnailUrl!.isNotEmpty) {
+      return thumbnailUrl;
+    }
+    final yid = youtubeId;
+    if (yid != null && yid.isNotEmpty) {
+      return 'https://img.youtube.com/vi/$yid/hqdefault.jpg';
+    }
+    return null;
+  }
 
   bool get isVideo => resourceType == 'video' || youtubeId != null;
 

@@ -65,7 +65,12 @@ Quy tắc bắt buộc:
    - C (Mối quan hệ): giao tiếp, phối hợp, khách hàng, đội nhóm, đàm phán, dẫn dắt người khác.
    - A (Cách làm việc): chủ động, linh hoạt, đa nhiệm, chịu áp lực, tự sắp xếp, cải tiến.
    Không thấy dấu hiệu nào thì chấm 0. Đừng chấm đều cho an toàn.
-5. Nếu ảnh mờ hoặc không đọc được chữ, trả "raw_text": "" và các mảng rỗng.`;
+5. Nếu ảnh mờ hoặc không đọc được chữ, trả "raw_text": "" và các mảng rỗng.
+6. Thông tin cá nhân trong tài liệu đã được thay bằng nhãn như [HỌ TÊN],
+   [EMAIL], [SỐ ĐIỆN THOẠI], [ĐỊA CHỈ], [NGÀY SINH], [SỐ ĐỊNH DANH],
+   [LIÊN KẾT CÁ NHÂN]. Tuyệt đối không suy đoán, trích xuất hay tái tạo thông
+   tin nhận diện cá nhân, và không đưa các nhãn đó vào kết quả. "summary" nói
+   về công việc, năng lực, kinh nghiệm, không gọi tên người.`;
 }
 
 function asString(v: unknown): string | null {

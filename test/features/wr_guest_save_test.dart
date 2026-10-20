@@ -104,18 +104,23 @@ void main() {
           isGuest: guest,
         );
 
-    test('khách ở lại Onboarding (phiên mở giữa Onboarding)', () {
+    test('khách ở lại Onboarding (khi chưa xem xong onboarding)', () {
       expect(go('/onboarding', seen: false), isNull);
     });
     test('khách mở được màn đăng nhập để vào tài khoản cũ', () {
       expect(go('/auth'), isNull);
     });
-    test('khách ở màn chờ → Home', () {
-      expect(go('/splash'), '/home');
+    test('khách chưa đăng nhập tài khoản thật ở màn chờ → chuyển sang /auth', () {
+      expect(go('/splash'), '/auth');
     });
-    test('khách vào được luồng nhìn lại và màn lưu', () {
+    test('khách được phép vào luồng nhìn lại /wr/flow/step và /auth/save', () {
       expect(go('/wr/flow/step'), isNull);
       expect(go('/auth/save'), isNull);
+    });
+    test('khách cố vào /home hoặc các route khác sẽ bị chặn về /auth', () {
+      expect(go('/home'), '/auth');
+      expect(go('/profile'), '/auth');
+      expect(go('/survey'), '/auth');
     });
     test('tài khoản thật giữ luật cũ: Onboarding/đăng nhập → Home', () {
       expect(go('/onboarding', guest: false), '/home');

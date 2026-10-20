@@ -1,12 +1,36 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Upload key để ký bản phát hành lên CH Play.
+//
+// Hai nguồn, ưu tiên theo thứ tự:
+//   1. Biến môi trường Codemagic (CM_KEYSTORE_PATH…) — có khi workflow khai
+//      `android_signing` trỏ tới keystore đã nạp ở Team settings > Code signing.
+//   2. android/key.properties trên máy dev (đã nằm trong .gitignore).
+// Không có nguồn nào thì bản release rơi về khoá debug: build chạy được để thử,
+// nhưng CH Play sẽ từ chối file đó.
+//
+// Đây là UPLOAD key, không phải app signing key: Play App Signing giữ khoá ký
+// thật ở phía Google. Mất upload key thì xin Google reset được, khác với mất
+// khoá ký.
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("key.properties")
+    if (file.exists()) load(FileInputStream(file))
+}
+val releaseStoreFile: String? =
+    System.getenv("CM_KEYSTORE_PATH") ?: keystoreProperties.getProperty("storeFile")
+
 android {
-    namespace = "app.workreflection.workreflection_mobile"
+    // Trùng bundle id bên iOS. Tên cũ app.workreflection.workreflection_mobile
+    // chưa từng lên CH Play, nên đổi lúc này không mất gì; sau khi tải AAB đầu
+    // tiên thì tên này khoá vĩnh viễn.
+    namespace = "app.workreflection.mobile"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,21 +44,34 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "app.workreflection.workreflection_mobile"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "app.workreflection.mobile"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = System.getenv("CM_KEYSTORE_PASSWORD")
+                    ?: keystoreProperties.getProperty("storePassword")
+                keyAlias = System.getenv("CM_KEY_ALIAS")
+                    ?: keystoreProperties.getProperty("keyAlias")
+                keyPassword = System.getenv("CM_KEY_PASSWORD")
+                    ?: keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (releaseStoreFile != null) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

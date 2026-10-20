@@ -30,6 +30,7 @@ import '../../auth/guest_session.dart';
 import '../../wr/presentation/wr_home_screen.dart'
     show CheckinOption, kCheckinOptions, startReflectionFromCheckin;
 import '../intro_video_providers.dart';
+import '../onboarding_state.dart' show onboardingCheckinProvider;
 import 'wr_intro_video_sheet.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
@@ -110,7 +111,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ensureGuestSession(ref);
-      await setSeenOnboarding();
     } catch (_) {
       if (mounted) setState(() => _busy = false);
       messenger.showSnackBar(
@@ -128,25 +128,45 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await then(router);
   }
 
+  /// Khi người dùng chọn cảm xúc ở bước cuối khảo sát Landing Page:
+  /// Mở phiên khách và chuyển tiếp vào luồng nhìn lại đầu tiên để người dùng
+  /// chọn các đáp án reflection (/wr/flow/step).
   Future<void> _pickMood(CheckinOption option) => _asGuest((router) async {
     if (!mounted) return;
+    ref.read(onboardingCheckinProvider.notifier).state = option;
     startReflectionFromCheckin(ref, option);
-    // Home nằm dưới luồng nhìn lại, để nút quay lại của bước đầu (`pop`) có
-    // chỗ về. `push` phải đợi một khung hình: go_router chưa dựng xong ngăn
-    // xếp của `go` thì `push` sẽ chồng lên ngăn xếp cũ.
-    router.go('/home');
-    await WidgetsBinding.instance.endOfFrame;
-    router.push('/wr/flow/step');
+    router.go('/wr/flow/step');
   });
 
-  Future<void> _skip() => _asGuest((router) async => router.go('/home'));
+  /// Bỏ qua: Đánh dấu đã qua onboarding rồi chuyển sang màn hình đăng ký / đăng nhập.
+  Future<void> _skip() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      ref.read(onboardingCheckinProvider.notifier).state = null;
+      await setSeenOnboarding();
+      ref.invalidate(seenOnboardingProvider);
+      if (mounted) {
+        context.go('/auth', extra: {'isLogin': false});
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
-  /// Người đã có tài khoản: đi đường cũ, đánh dấu đã xem rồi để router đưa
-  /// sang `/auth`.
+  /// Người đã có tài khoản: đánh dấu đã xem rồi mở màn hình đăng nhập.
   Future<void> _signIn() async {
-    await setSeenOnboarding();
-    ref.invalidate(seenOnboardingProvider);
-    await ref.read(seenOnboardingProvider.future);
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await setSeenOnboarding();
+      ref.invalidate(seenOnboardingProvider);
+      if (mounted) {
+        context.go('/auth', extra: {'isLogin': true});
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override

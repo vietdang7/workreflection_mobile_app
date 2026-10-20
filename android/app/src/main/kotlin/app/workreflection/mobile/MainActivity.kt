@@ -1,4 +1,4 @@
-package app.workreflection.workreflection_mobile
+package app.workreflection.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
