@@ -31,6 +31,8 @@
 //
 // Pure Dart, không phụ thuộc Flutter → test được trực tiếp.
 
+import 'package:flutter/foundation.dart';
+
 import '../l10n/wr_tr.dart';
 
 /// Bundle id của bản iOS. Phải khớp `PRODUCT_BUNDLE_IDENTIFIER` trong
@@ -125,3 +127,62 @@ WrIapProduct? wrIapProductById(String? id) {
 
 /// True khi [id] là một gói Premium của app này.
 bool isWrIapProductId(String? id) => wrIapProductById(id) != null;
+
+/// Package name bản Android — trùng [kIosBundleId] cho dễ nhớ.
+///
+/// PHẢI khớp `applicationId` trong `android/app/build.gradle.kts` và
+/// `ANDROID_PACKAGE_NAME` trong `supabase/functions/wr-verify-iap`.
+const String kAndroidPackageName = 'app.workreflection.mobile';
+
+/// Kho ứng dụng thu tiền cho bản build đang chạy.
+///
+/// Product id giống hệt nhau ở hai kho, nên khác biệt chỉ còn ở ba chỗ: server
+/// kiểm biên lai theo cách nào, câu chữ gọi tên tài khoản bị trừ tiền, và trang
+/// quản lý thuê bao mở ra ở đâu. Gom cả ba vào đây để màn hình không phải tự
+/// rẽ nhánh theo nền tảng.
+enum WrIapStore {
+  appStore,
+  googlePlay;
+
+  /// Kho của máy đang chạy. Android là Google Play, còn lại là App Store —
+  /// gồm cả bản chạy thử trên máy bàn, nơi kho nào cũng không bán được.
+  static WrIapStore get current =>
+      defaultTargetPlatform == TargetPlatform.android
+      ? WrIapStore.googlePlay
+      : WrIapStore.appStore;
+
+  /// Giá trị `platform` gửi cho `wr-verify-iap`.
+  String get verifyPlatform => switch (this) {
+    WrIapStore.appStore => 'ios',
+    WrIapStore.googlePlay => 'android',
+  };
+
+  /// Tên tài khoản bị trừ tiền, dùng trong câu "tài khoản … của bạn".
+  String get accountName => switch (this) {
+    WrIapStore.appStore => 'Apple',
+    WrIapStore.googlePlay => 'Google Play',
+  };
+
+  /// Chỗ người dùng tự tắt gia hạn, nói bằng lời.
+  String get manageHint => switch (this) {
+    WrIapStore.appStore => tr(
+      'phần Cài đặt tài khoản Apple',
+      'your Apple account settings',
+    ),
+    WrIapStore.googlePlay => tr(
+      'Google Play › Thanh toán và gói thuê bao',
+      'Google Play › Payments & subscriptions',
+    ),
+  };
+
+  /// Trang quản lý thuê bao của kho.
+  ///
+  /// Bản Google kèm `package` để mở thẳng danh sách gói của WorkReflection
+  /// thay vì mọi thuê bao của tài khoản.
+  String get manageSubscriptionsUrl => switch (this) {
+    WrIapStore.appStore => 'https://apps.apple.com/account/subscriptions',
+    WrIapStore.googlePlay =>
+      'https://play.google.com/store/account/subscriptions'
+          '?package=$kAndroidPackageName',
+  };
+}

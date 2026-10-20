@@ -79,8 +79,9 @@ class WrStorePolicy {
   ///   • [allowsNativeIap]      — StoreKit/Play Billing, kho ứng dụng thu hộ và
   ///     giữ lại 15–30%. Đây là thứ Guideline 3.1.1 BẮT BUỘC.
   ///
-  /// Mặc định false để bản Android và các bản chạy thử không đụng tới StoreKit
-  /// — hiện chỉ bản iOS bật, vì mới chỉ khai gói bên App Store Connect.
+  /// Mặc định false để các bản chạy thử không đụng tới kho ứng dụng. Bản phát
+  /// hành iOS và Android đều bật qua `FORCE_STORE_POLICY=app_store`; kho nào
+  /// thu tiền là do [WrIapStore.current] quyết định.
   final bool allowsNativeIap;
 
   /// Mở màn QR trong app. KHÔNG phải mặc định của bản build nào cả.

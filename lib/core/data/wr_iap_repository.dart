@@ -107,7 +107,8 @@ class WrIapPurchase {
   final String productId;
   final WrIapStatus status;
 
-  /// Biên lai đã ký (JWS với StoreKit 2). Đây là thứ duy nhất backend tin.
+  /// Biên lai đã ký (JWS với StoreKit 2) hoặc purchase token của Google Play.
+  /// Đây là thứ duy nhất backend tin.
   final String serverVerificationData;
 
   /// Còn phải gọi [WrIapRepository.finish] không.
@@ -343,7 +344,7 @@ class StoreKitIapRepository implements WrIapRepository {
         body: {
           'receipt': purchase.serverVerificationData,
           'productId': purchase.productId,
-          'platform': 'ios',
+          'platform': WrIapStore.current.verifyPlatform,
         },
       );
       final data = res.data;

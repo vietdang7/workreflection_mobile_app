@@ -13,19 +13,17 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../features/wr/iap_providers.dart';
 import '../l10n/wr_tr.dart';
+import '../logic/wr_iap_catalog.dart';
 import '../logic/wr_iap_renewal.dart';
 import '../theme/wr_colors.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
-/// Trang quản lý thuê bao của Apple.
-///
-/// Mở thẳng trang này chứ không hướng dẫn "vào Cài đặt → chạm tên bạn → …":
-/// một đường dẫn bấm được luôn thì người ta bấm, còn một lộ trình bốn bước thì
-/// người ta bỏ. Việc huỷ nằm hoàn toàn trong hệ thống của Apple — app không
-/// chặn được và cũng không cần biết kết quả ngay, Apple sẽ báo qua
-/// `wr-apple-notifications`.
-const String kAppleManageSubscriptionsUrl =
-    'https://apps.apple.com/account/subscriptions';
+// Nút quản lý gói mở thẳng trang thuê bao của kho
+// ([WrIapStore.manageSubscriptionsUrl]) chứ không hướng dẫn "vào Cài đặt → chạm
+// tên bạn → …": một đường dẫn bấm được luôn thì người ta bấm, còn một lộ trình
+// bốn bước thì người ta bỏ. Việc huỷ nằm hoàn toàn trong hệ thống của kho — app
+// không chặn được và cũng không cần biết kết quả ngay, kho sẽ báo qua
+// `wr-apple-notifications` / `wr-google-notifications`.
 
 class WrRenewalNoticeCard extends ConsumerWidget {
   const WrRenewalNoticeCard({super.key});
@@ -99,7 +97,7 @@ Future<void> _openManageSubscriptions(BuildContext context) async {
   var opened = false;
   try {
     opened = await launchUrl(
-      Uri.parse(kAppleManageSubscriptionsUrl),
+      Uri.parse(WrIapStore.current.manageSubscriptionsUrl),
       mode: LaunchMode.externalApplication,
     );
   } catch (_) {

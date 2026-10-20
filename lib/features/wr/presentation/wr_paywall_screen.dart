@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/data/wr_iap_repository.dart';
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/logic/wr_iap_catalog.dart' show WrIapStore;
 import '../../../core/logic/wr_pricing.dart';
 import '../../../core/models/wr_intelligence.dart' show WrPlan;
 import '../../../core/logic/wr_store_policy.dart';
@@ -351,8 +352,10 @@ class _NativeIapCta extends ConsumerWidget {
           SnackBar(
             content: Text(
               wrKeepCompounds(tr(
-                'Không tìm thấy gói nào đã mua trên tài khoản Apple này.',
-                'No purchases found on this Apple account.',
+                'Không tìm thấy gói nào đã mua trên tài khoản '
+                    '${WrIapStore.current.accountName} này.',
+                'No purchases found on this '
+                    '${WrIapStore.current.accountName} account.',
               )),
             ),
           ),
@@ -432,6 +435,7 @@ class _IapOfferList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(wrIapControllerProvider.notifier);
     final busy = state.busy;
+    final store = WrIapStore.current;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -488,13 +492,13 @@ class _IapOfferList extends ConsumerWidget {
         WrParagraph(
           tr(
             'Gói tự động gia hạn cho tới khi bạn tắt. Tiền được trừ vào tài khoản '
-                'Apple của bạn, và kỳ tiếp theo sẽ được trừ trong vòng 24 giờ trước '
-                'khi kỳ hiện tại kết thúc. Bạn tắt gia hạn bất cứ lúc nào trong phần '
-                'Cài đặt tài khoản Apple.',
+                '${store.accountName} của bạn, và kỳ tiếp theo sẽ được trừ trong '
+                'vòng 24 giờ trước khi kỳ hiện tại kết thúc. Bạn tắt gia hạn bất '
+                'cứ lúc nào trong ${store.manageHint}.',
             'Subscriptions renew automatically until you turn them off. Payment '
-                'is charged to your Apple account, and the next period is charged '
-                'within 24 hours before the current one ends. You can turn off '
-                'renewal at any time in your Apple account settings.',
+                'is charged to your ${store.accountName} account, and the next '
+                'period is charged within 24 hours before the current one ends. '
+                'You can turn off renewal at any time in ${store.manageHint}.',
           ),
           style: const TextStyle(
             fontSize: 11,
@@ -506,15 +510,19 @@ class _IapOfferList extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _LegalLink(
-              key: const Key('wr_paywall_terms_link'),
-              label: tr('Điều khoản sử dụng', 'Terms of Use'),
-              url: kAppleStandardEulaUrl,
-            ),
-            const Text(
-              '  ·  ',
-              style: TextStyle(fontSize: 11, color: WrColors.muted),
-            ),
+            // EULA mẫu là của Apple, chỉ có nghĩa với người mua qua App Store.
+            // Google không có bản tương đương và không đòi đường dẫn này.
+            if (store == WrIapStore.appStore) ...[
+              _LegalLink(
+                key: const Key('wr_paywall_terms_link'),
+                label: tr('Điều khoản sử dụng', 'Terms of Use'),
+                url: kAppleStandardEulaUrl,
+              ),
+              const Text(
+                '  ·  ',
+                style: TextStyle(fontSize: 11, color: WrColors.muted),
+              ),
+            ],
             _LegalLink(
               key: const Key('wr_paywall_privacy_link'),
               label: tr('Chính sách quyền riêng tư', 'Privacy Policy'),
