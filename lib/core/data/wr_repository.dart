@@ -29,10 +29,7 @@ import '../models/workshop.dart';
 /// `.doc` bản cũ thì KHÔNG: nó là định dạng nhị phân đời khác, không phải ZIP,
 /// bóc được nó là một việc riêng. Cho chọn rồi báo hỏng còn tệ hơn không cho
 /// chọn.
-const List<String> kContextDocExtensions = [
-  'pdf',
-  'docx',
-];
+const List<String> kContextDocExtensions = ['pdf', 'docx'];
 
 /// Kiểu MIME theo đuôi file, dùng lúc đẩy lên Storage.
 String contextDocMimeType(String ext) => switch (ext.toLowerCase()) {
@@ -48,6 +45,14 @@ String contextDocMimeType(String ext) => switch (ext.toLowerCase()) {
 // ---------------------------------------------------------------------------
 // Abstract interface
 // ---------------------------------------------------------------------------
+
+/// Nhãn MIME gửi kèm ảnh avatar.
+///
+/// Nhãn chuẩn của JPEG là `image/jpeg`. Bucket `avatars` chỉ nhận nhãn chuẩn,
+/// nên gửi `image/jpg` bị trả 400: ảnh chụp bằng camera (JPG) không lên được
+/// trong khi ảnh chụp màn hình (PNG) vẫn qua (máy thật 20/10/2026).
+String avatarMimeType(String ext) =>
+    ext == 'jpg' || ext == 'jpeg' ? 'image/jpeg' : 'image/$ext';
 
 abstract class WrRepository {
   // --- Check-ins ---
@@ -598,23 +603,31 @@ class SupabaseWrRepository implements WrRepository {
   @override
   Future<String> uploadAvatar(List<int> bytes, String ext) async {
     final uid = _uid;
-    final filePath = '$uid/avatar.$ext';
+    final fileName = 'avatar.$ext';
+    final filePath = '$uid/$fileName';
 
-    // Remove old files in user's folder first (mirrors web behaviour).
-    final existing = await _client.storage.from('avatars').list(path: uid);
-    if (existing.isNotEmpty) {
-      final toRemove = existing.map((f) => '$uid/${f.name}').toList();
-      await _client.storage.from('avatars').remove(toRemove);
-    }
-
-    // Upload with upsert.
+    // Tải ảnh mới lên TRƯỚC, xoá ảnh cũ SAU. Làm ngược lại thì một lần tải
+    // hỏng là mất luôn avatar đang có, mà cc_profiles vẫn trỏ vào tệp đã xoá.
     await _client.storage
         .from('avatars')
         .uploadBinary(
           filePath,
           Uint8List.fromList(bytes),
-          fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
+          fileOptions: FileOptions(
+            upsert: true,
+            contentType: avatarMimeType(ext),
+          ),
         );
+
+    // Dọn ảnh cũ khác đuôi (avatar.png khi vừa tải avatar.jpg…).
+    final existing = await _client.storage.from('avatars').list(path: uid);
+    final toRemove = existing
+        .where((f) => f.name != fileName)
+        .map((f) => '$uid/${f.name}')
+        .toList();
+    if (toRemove.isNotEmpty) {
+      await _client.storage.from('avatars').remove(toRemove);
+    }
 
     // Public URL with cache-bust (mirrors web ?t=Date.now()).
     final urlData = _client.storage.from('avatars').getPublicUrl(filePath);
