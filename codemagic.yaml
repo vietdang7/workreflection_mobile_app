@@ -216,7 +216,10 @@ workflows:
           # versionCode phải tăng dần qua mọi lần tải lên Play, kể cả bản chỉ
           # nằm ở Internal testing. $BUILD_NUMBER là bộ đếm build của chính
           # workflow này trên Codemagic nên tự tăng — chừng nào chưa có service
-          # account để hỏi số mới nhất trên Play thì dùng tạm nó.
+          # account để hỏi số mới nhất trên Play thì dùng tạm nó, cộng 100:
+          # versionCode 1 và 4 đã bị chiếm bởi hai bản build tay tải lên
+          # Internal testing ngày 20/10/2026 để thử Billing, mà bộ đếm của
+          # workflow này mới tới 3.
           #
           # FORCE_STORE_POLICY=app_store → bán Premium bằng Google Play Billing,
           # không QR, không nút sang web (Play Payments policy cấm cả hai ở kho
@@ -231,7 +234,7 @@ workflows:
           flutter build appbundle --release \
             --dart-define=FORCE_STORE_POLICY=app_store \
             --build-name=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1) \
-            --build-number="$BUILD_NUMBER"
+            --build-number="$((BUILD_NUMBER + 100))"
 
     artifacts:
       - build/app/outputs/bundle/release/*.aab
