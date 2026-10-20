@@ -33,6 +33,8 @@ import { deepSeekFetch, deepSeekKey, deepSeekModel, deepSeekText }
   from '../_shared/deepseek.ts';
 import { languageRule, pick, readLocale, readLocaleHeader, WrLocale }
   from '../_shared/locale.ts';
+import { describeCounts, loadPiiIdentity, redactPiiDetailed }
+  from '../_shared/pii_redact.ts';
 import { buildExtractionPrompt, normalizeAnalysis } from './analysis.ts';
 import { extractDocxText } from './docx.ts';
 import { extractPdfText } from './pdf.ts';
@@ -438,10 +440,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
   //
   // Chữ đã có sẵn, nên KHÔNG bắt model chép lại vào `raw_text`: chép lại một
   // tài liệu dài là cách nhanh nhất để vượt `max_tokens` và cắt cụt JSON.
-  const prompt = buildExtractionPrompt(String(doc.doc_type ?? 'other')) +
+  //
+  // Khử PII TRƯỚC khi ghép prompt (`_shared/pii_redact.ts`): DeepSeek chỉ cần
+  // năng lực và kinh nghiệm, không cần biết người đó là ai. Bản gốc vẫn lưu
+  // nguyên vào `extracted_text` ở bước 8 — của riêng người dùng.
+  const docType = String(doc.doc_type ?? 'other');
+  const redacted = redactPiiDetailed(docText.slice(0, MAX_TEXT_CHARS), {
+    isCv: docType !== 'jd',
+    identity: await loadPiiIdentity(db, user.id),
+  });
+  console.log(`PII đã khử: ${describeCounts(redacted.counts)}`);
+  const prompt = buildExtractionPrompt(docType) +
     languageRule(locale) +
     '\n\nChữ của tài liệu đã được bóc sẵn ở dưới. Trường "raw_text" trả chuỗi rỗng "".' +
-    `\n\nNỘI DUNG TÀI LIỆU:\n${docText.slice(0, MAX_TEXT_CHARS)}`;
+    `\n\nNỘI DUNG TÀI LIỆU:\n${redacted.text}`;
 
   const callUpstream = () =>
     deepSeekFetch(apiKey, [{ role: 'user', content: prompt }], {
