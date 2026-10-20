@@ -199,7 +199,9 @@ class StoreKitIapRepository implements WrIapRepository {
   Future<List<WrIapOffer>> fetchOffers() async {
     final ProductDetailsResponse res;
     try {
-      res = await _iap.queryProductDetails(kWrIapProductIds);
+      res = await _iap.queryProductDetails(
+        kWrIapProductIds.map(WrIapStore.current.storeProductId).toSet(),
+      );
     } catch (_) {
       return const [];
     }
@@ -211,7 +213,7 @@ class StoreKitIapRepository implements WrIapRepository {
     for (final product in kWrIapProducts) {
       ProductDetails? details;
       for (final d in res.productDetails) {
-        if (d.id == product.id) {
+        if (wrIapCanonicalProductId(d.id) == product.id) {
           details = d;
           break;
         }
@@ -219,7 +221,7 @@ class StoreKitIapRepository implements WrIapRepository {
       if (details == null) continue;
       offers.add(
         WrIapOffer(
-          id: details.id,
+          id: product.id,
           title: details.title.isEmpty ? product.title : details.title,
           description: details.description.isEmpty
               ? product.blurb
@@ -248,7 +250,7 @@ class StoreKitIapRepository implements WrIapRepository {
 
   Stream<WrIapPurchase> _convert(List<PurchaseDetails> batch) async* {
     for (final d in batch) {
-      if (!isWrIapProductId(d.productID)) {
+      if (!isWrIapProductId(wrIapCanonicalProductId(d.productID))) {
         // Giao dịch của product id không còn bán — ví dụ gói của bản build cũ.
         // Vẫn PHẢI đóng lại: giao dịch chưa đóng thì iOS dựng lại nó mỗi lần mở
         // app, và người dùng thấy hộp thoại mua hiện lên vô cớ.
@@ -269,7 +271,7 @@ class StoreKitIapRepository implements WrIapRepository {
 
   WrIapPurchase _toPurchase(PurchaseDetails d) {
     return WrIapPurchase(
-      productId: d.productID,
+      productId: wrIapCanonicalProductId(d.productID),
       status: switch (d.status) {
         PurchaseStatus.pending => WrIapStatus.pending,
         PurchaseStatus.purchased => WrIapStatus.purchased,
@@ -286,10 +288,11 @@ class StoreKitIapRepository implements WrIapRepository {
 
   @override
   Future<void> buy({required String productId, required String userId}) async {
-    final res = await _iap.queryProductDetails({productId});
+    final storeId = WrIapStore.current.storeProductId(productId);
+    final res = await _iap.queryProductDetails({storeId});
     ProductDetails? details;
     for (final d in res.productDetails) {
-      if (d.id == productId) {
+      if (d.id == storeId) {
         details = d;
         break;
       }

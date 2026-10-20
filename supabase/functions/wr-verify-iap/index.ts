@@ -78,11 +78,17 @@ const ANDROID_PACKAGE_NAME = 'app.workreflection.mobile';
 /// luôn trả `expiresDate` và con số đó mới đúng: Apple có thể tặng thêm ngày
 /// (đền bù sự cố, gia hạn khuyến mãi) mà app không hề biết.
 ///
-/// Product id bên Google Play cố ý đặt TRÙNG với App Store, nên một danh sách
-/// dùng cho cả hai kho.
 const PRODUCT_DURATION_DAYS: Record<string, number> = {
   'app.workreflection.mobile.premium.yearly': 365,
   'app.workreflection.mobile.premium.monthly': 30,
+};
+
+/// Danh mục bên Google Play. Gói năm trùng mã App Store; gói tháng phải khác vì
+/// Play giới hạn product id 40 ký tự (`…premium.monthly` dài 41). Bản sao của
+/// `kIapMonthlyPlayProductId` bên Dart.
+const PLAY_PRODUCT_DURATION_DAYS: Record<string, number> = {
+  'app.workreflection.mobile.premium.yearly': 365,
+  'app.workreflection.mobile.premium.month': 30,
 };
 
 const CORS_HEADERS = {
@@ -286,7 +292,7 @@ async function verifyAndroid(
     return fail(playInactiveMessage(sub.subscriptionState), 400);
   }
 
-  const durationDays = PRODUCT_DURATION_DAYS[sub.productId];
+  const durationDays = PLAY_PRODUCT_DURATION_DAYS[sub.productId];
   if (durationDays === undefined) {
     console.error('Product id Play không nằm trong danh mục:', sub.productId);
     return fail('Gói này không còn được bán.', 400);

@@ -190,6 +190,26 @@ void main() {
     test('không có hai gói trùng id', () {
       expect(kWrIapProductIds.length, kWrIapProducts.length);
     });
+
+    test('mã gửi kho Google Play vừa giới hạn 40 ký tự và đổi ngược được', () {
+      for (final store in WrIapStore.values) {
+        for (final p in kWrIapProducts) {
+          final storeId = store.storeProductId(p.id);
+          expect(wrIapCanonicalProductId(storeId), p.id);
+          if (store == WrIapStore.googlePlay) {
+            expect(storeId.length, lessThanOrEqualTo(40), reason: storeId);
+          }
+        }
+      }
+      expect(
+        WrIapStore.googlePlay.storeProductId(kIapMonthlyProductId),
+        kIapMonthlyPlayProductId,
+      );
+      expect(
+        WrIapStore.appStore.storeProductId(kIapMonthlyProductId),
+        kIapMonthlyProductId,
+      );
+    });
   });
 
   group('Nhãn thời hạn', () {

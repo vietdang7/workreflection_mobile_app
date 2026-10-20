@@ -50,6 +50,16 @@ const String kIapYearlyProductId = 'app.workreflection.mobile.premium.yearly';
 /// Gói tháng, khai bên App Store Connect.
 const String kIapMonthlyProductId = 'app.workreflection.mobile.premium.monthly';
 
+/// Mã gói tháng bên Google Play.
+///
+/// Play giới hạn product id 40 ký tự mà [kIapMonthlyProductId] dài 41, nên
+/// riêng gói này hai kho khác mã. Trong app vẫn gọi gói bằng mã App Store
+/// ([kWrIapProducts], Paywall, khoá nút mua); chỉ lúc nói chuyện với kho mới
+/// đổi qua [WrIapStore.storeProductId] và đổi ngược bằng
+/// [wrIapCanonicalProductId].
+const String kIapMonthlyPlayProductId =
+    'app.workreflection.mobile.premium.month';
+
 /// Một gói Premium bán qua kho ứng dụng.
 class WrIapProduct {
   const WrIapProduct({
@@ -125,6 +135,11 @@ WrIapProduct? wrIapProductById(String? id) {
   return null;
 }
 
+/// Đổi mã kho trả về (ví dụ [kIapMonthlyPlayProductId]) về mã dùng trong app.
+/// Mã không cần đổi thì trả nguyên.
+String wrIapCanonicalProductId(String id) =>
+    id == kIapMonthlyPlayProductId ? kIapMonthlyProductId : id;
+
 /// True khi [id] là một gói Premium của app này.
 bool isWrIapProductId(String? id) => wrIapProductById(id) != null;
 
@@ -161,6 +176,15 @@ enum WrIapStore {
   String get accountName => switch (this) {
     WrIapStore.appStore => 'Apple',
     WrIapStore.googlePlay => 'Google Play',
+  };
+
+  /// Mã của gói [canonicalId] ở kho này. Ngược lại là [wrIapCanonicalProductId].
+  String storeProductId(String canonicalId) => switch (this) {
+    WrIapStore.appStore => canonicalId,
+    WrIapStore.googlePlay =>
+      canonicalId == kIapMonthlyProductId
+          ? kIapMonthlyPlayProductId
+          : canonicalId,
   };
 
   /// Chỗ người dùng tự tắt gia hạn, nói bằng lời.
