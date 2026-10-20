@@ -222,7 +222,15 @@ class StoreKitIapRepository implements WrIapRepository {
       offers.add(
         WrIapOffer(
           id: product.id,
-          title: details.title.isEmpty ? product.title : details.title,
+          // Google Play gắn tên app vào sau tên gói ("Premium 1 năm
+          // (WorkReflection)", trước khi duyệt còn là "(app.workreflection.mobile
+          // (unreviewed))") — lặp chữ trên chính màn của app, nên bên Play dùng
+          // tên trong danh mục.
+          title:
+              details.title.isEmpty ||
+                  WrIapStore.current == WrIapStore.googlePlay
+              ? product.title
+              : details.title,
           description: details.description.isEmpty
               ? product.blurb
               : details.description,

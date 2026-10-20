@@ -453,6 +453,36 @@ void main() {
       expect(p.status, WrIapStatus.canceled);
     });
 
+    test('tên gói lấy từ danh mục, không mang đuôi tên app của Play', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        final plugin = _FakePlugin()
+          ..details = [
+            ProductDetails(
+              id: kIapMonthlyPlayProductId,
+              title: 'Premium 1 tháng (app.workreflection.mobile (unreviewed))',
+              description: 'mô tả',
+              price: '70.000 ₫',
+              rawPrice: 70000,
+              currencyCode: 'VND',
+            ),
+          ];
+        final repo = StoreKitIapRepository(
+          plugin,
+          SupabaseClient('http://localhost', 'test-anon-key'),
+        );
+        final offers = await repo.fetchOffers();
+        expect(offers.single.id, kIapMonthlyProductId);
+        expect(offers.single.title, isNot(contains('unreviewed')));
+        expect(
+          offers.single.title,
+          wrIapProductById(kIapMonthlyProductId)!.title,
+        );
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+
     test('mã lỗi lạ thì để Paywall dùng câu chung', () async {
       final p = await firstUpdate(
         emptyResult(PurchaseStatus.error, 'BillingResponse.error'),
@@ -663,6 +693,15 @@ class _FakePlugin implements InAppPurchase {
 
   @override
   Stream<List<PurchaseDetails>> get purchaseStream => _controller.stream;
+
+  List<ProductDetails> details = const [];
+
+  @override
+  Future<ProductDetailsResponse> queryProductDetails(Set<String> ids) async =>
+      ProductDetailsResponse(
+        productDetails: details.where((d) => ids.contains(d.id)).toList(),
+        notFoundIDs: const [],
+      );
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -217,7 +217,7 @@ workflows:
           # nằm ở Internal testing. $BUILD_NUMBER là bộ đếm build của chính
           # workflow này trên Codemagic nên tự tăng — chừng nào chưa có service
           # account để hỏi số mới nhất trên Play thì dùng tạm nó, cộng 100:
-          # versionCode 1 và 4 đã bị chiếm bởi hai bản build tay tải lên
+          # versionCode 1, 4 và 5 đã bị chiếm bởi các bản build tay tải lên
           # Internal testing ngày 20/10/2026 để thử Billing, mà bộ đếm của
           # workflow này mới tới 3.
           #
