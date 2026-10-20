@@ -202,3 +202,33 @@ class WrChatException implements Exception {
   @override
   String toString() => message;
 }
+
+/// Lý do người dùng báo cáo một câu trả lời của trợ lý.
+///
+/// Giá trị [wire] khớp check constraint `reason` của bảng `wr_ai_reports`.
+enum WrAiReportReason {
+  offensive,
+  harmful,
+  sexual,
+  misleading,
+  other;
+
+  String get wire => name;
+
+  String get label => switch (this) {
+    WrAiReportReason.offensive => tr(
+      'Xúc phạm, thù ghét hoặc quấy rối',
+      'Offensive, hateful or harassing',
+    ),
+    WrAiReportReason.harmful => tr(
+      'Nguy hiểm hoặc khuyến khích tự làm hại',
+      'Dangerous or encourages self-harm',
+    ),
+    WrAiReportReason.sexual => tr('Nội dung tình dục', 'Sexual content'),
+    WrAiReportReason.misleading => tr(
+      'Sai sự thật hoặc gây hiểu lầm',
+      'False or misleading',
+    ),
+    WrAiReportReason.other => tr('Lý do khác', 'Something else'),
+  };
+}
