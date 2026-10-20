@@ -17,10 +17,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:workreflection_mobile/core/data/wr_iap_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_entitlement.dart';
 import 'package:workreflection_mobile/core/logic/wr_iap_catalog.dart';
+import 'package:workreflection_mobile/core/logic/wr_iap_renewal.dart';
 import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
 import 'package:workreflection_mobile/core/logic/wr_store_policy.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
@@ -152,9 +155,11 @@ Widget _paywall(
   _FakeIapRepository repo, {
   WrStorePolicy policy = WrStorePolicy.appStore,
   bool premium = false,
+  WrIapSubscription? subscription,
 }) => ProviderScope(
   overrides: [
     wrStorePolicyProvider.overrideWithValue(policy),
+    wrIapSubscriptionProvider.overrideWith((ref) async => subscription),
     wrIapRepositoryProvider.overrideWithValue(repo),
     currentUserIdProvider.overrideWithValue(_userId),
     wrPremiumPlansProvider.overrideWith((ref) async => _webPlans),
@@ -403,6 +408,93 @@ void main() {
     });
   });
 
+  group('Kết quả rỗng của Google Play', () {
+    // Play báo lần mua hỏng / bị huỷ bằng một giao dịch `productID: ''`. Nuốt
+    // nó là Paywall quay mãi — đã gặp trên máy thật 20/10/2026.
+    Future<WrIapPurchase> firstUpdate(PurchaseDetails d) {
+      final plugin = _FakePlugin();
+      final repo = StoreKitIapRepository(
+        plugin,
+        SupabaseClient('http://localhost', 'test-anon-key'),
+      );
+      final next = repo.purchaseUpdates.first;
+      plugin.emit([d]);
+      return next;
+    }
+
+    PurchaseDetails emptyResult(PurchaseStatus status, String code) =>
+        PurchaseDetails(
+            purchaseID: '',
+            productID: '',
+            status: status,
+            transactionDate: null,
+            verificationData: PurchaseVerificationData(
+              localVerificationData: '',
+              serverVerificationData: '',
+              source: 'google_play',
+            ),
+          )
+          ..error = IAPError(
+            source: 'google_play',
+            code: 'purchase_error',
+            message: code,
+          );
+
+    test('ITEM_UNAVAILABLE tới được tầng trên thành lỗi đọc được', () async {
+      final p = await firstUpdate(
+        emptyResult(PurchaseStatus.error, 'BillingResponse.itemUnavailable'),
+      );
+      expect(p.status, WrIapStatus.error);
+      expect(p.errorMessage, contains('Google Play'));
+      expect(p.errorMessage, isNot(contains('BillingResponse')));
+    });
+
+    test('huỷ cũng tới được tầng trên', () async {
+      final p = await firstUpdate(
+        emptyResult(PurchaseStatus.canceled, 'BillingResponse.userCanceled'),
+      );
+      expect(p.status, WrIapStatus.canceled);
+    });
+
+    test('tên gói lấy từ danh mục, không mang đuôi tên app của Play', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        final plugin = _FakePlugin()
+          ..details = [
+            ProductDetails(
+              id: kIapMonthlyPlayProductId,
+              title: 'Premium 1 tháng (app.workreflection.mobile (unreviewed))',
+              description: 'mô tả',
+              price: '70.000 ₫',
+              rawPrice: 70000,
+              currencyCode: 'VND',
+            ),
+          ];
+        final repo = StoreKitIapRepository(
+          plugin,
+          SupabaseClient('http://localhost', 'test-anon-key'),
+        );
+        final offers = await repo.fetchOffers();
+        expect(offers.single.id, kIapMonthlyProductId);
+        expect(offers.single.title, isNot(contains('unreviewed')));
+        expect(
+          offers.single.title,
+          wrIapProductById(kIapMonthlyProductId)!.title,
+        );
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+
+    test('mã lỗi lạ thì để Paywall dùng câu chung', () async {
+      final p = await firstUpdate(
+        emptyResult(PurchaseStatus.error, 'BillingResponse.error'),
+      );
+      expect(p.status, WrIapStatus.error);
+      expect(p.errorMessage, isNull);
+    });
+  });
+
   group('Hai kho ứng dụng', () {
     test('Android bán qua Google Play, còn lại qua App Store', () {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -559,6 +651,39 @@ void main() {
       );
     });
 
+    testWidgets('gói mua qua kho: trang Bản Premium có nút quản lý gói', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _paywall(
+          _FakeIapRepository(),
+          premium: true,
+          subscription: WrIapSubscription(
+            productId: kIapMonthlyProductId,
+            expiresAt: DateTime.now().add(const Duration(days: 20)),
+            autoRenew: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wr_paywall_manage_subscription')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Premium từ web: không có gói kho nào để tắt', (tester) async {
+      await tester.pumpWidget(_paywall(_FakeIapRepository(), premium: true));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_paywall_cta_owned')), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_paywall_manage_subscription')),
+        findsNothing,
+      );
+    });
+
     testWidgets('bấm mua thì gọi kho ứng dụng', (tester) async {
       final repo = _FakeIapRepository();
       await tester.pumpWidget(_paywall(repo));
@@ -595,4 +720,25 @@ void main() {
       expect(WrStorePolicy.appStore, isNot(WrStorePolicy.silent));
     });
   });
+}
+
+class _FakePlugin implements InAppPurchase {
+  final _controller = StreamController<List<PurchaseDetails>>.broadcast();
+
+  void emit(List<PurchaseDetails> batch) => _controller.add(batch);
+
+  @override
+  Stream<List<PurchaseDetails>> get purchaseStream => _controller.stream;
+
+  List<ProductDetails> details = const [];
+
+  @override
+  Future<ProductDetailsResponse> queryProductDetails(Set<String> ids) async =>
+      ProductDetailsResponse(
+        productDetails: details.where((d) => ids.contains(d.id)).toList(),
+        notFoundIDs: const [],
+      );
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

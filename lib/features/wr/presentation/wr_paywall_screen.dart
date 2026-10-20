@@ -15,6 +15,8 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_app_background.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../../core/widgets/wr_renewal_notice_card.dart'
+    show openWrManageSubscriptions;
 import '../iap_providers.dart';
 import '../wr_providers.dart';
 
@@ -158,7 +160,12 @@ class _PaywallCta extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (alreadyPremium) {
-      return Container(
+      // Gói mua qua kho ứng dụng thì phải chỉ được chỗ tắt gia hạn ngay tại
+      // đây — đây là trang người dùng mở khi muốn xem gói của mình. Gói cấp từ
+      // web (role) không có gì để tắt, nên không hiện.
+      final sub = ref.watch(wrIapSubscriptionProvider).valueOrNull;
+      final storeManaged = sub != null && sub.revokedAt == null;
+      final owned = Container(
         key: const Key('wr_paywall_cta_owned'),
         decoration: BoxDecoration(
           color: WrColors.teal.withValues(alpha: 0.08),
@@ -192,6 +199,34 @@ class _PaywallCta extends ConsumerWidget {
             ),
           ],
         ),
+      );
+      if (!storeManaged) return owned;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          owned,
+          GestureDetector(
+            key: const Key('wr_paywall_manage_subscription'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => openWrManageSubscriptions(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Text(
+                tr(
+                  'Quản lý gói đăng ký (tắt gia hạn)',
+                  'Manage subscription (turn off renewal)',
+                ),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: WrColors.pillTealText,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+        ],
       );
     }
 

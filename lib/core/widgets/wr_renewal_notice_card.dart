@@ -75,9 +75,11 @@ class WrRenewalNoticeCard extends ConsumerWidget {
             const SizedBox(height: 12),
             GestureDetector(
               key: const Key('wr_renewal_notice_manage'),
-              onTap: () => _openManageSubscriptions(context),
+              onTap: () => openWrManageSubscriptions(context),
               child: Text(
-                wrKeepCompounds(tr('Quản lý gói đăng ký', 'Manage subscription')),
+                wrKeepCompounds(
+                  tr('Quản lý gói đăng ký', 'Manage subscription'),
+                ),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -93,7 +95,10 @@ class WrRenewalNoticeCard extends ConsumerWidget {
   }
 }
 
-Future<void> _openManageSubscriptions(BuildContext context) async {
+/// Mở trang quản lý thuê bao của kho đang bán (App Store hoặc Google Play).
+///
+/// Dùng chung cho thẻ nhắc gia hạn ở màn Tôi và trang Bản Premium.
+Future<void> openWrManageSubscriptions(BuildContext context) async {
   var opened = false;
   try {
     opened = await launchUrl(
@@ -107,12 +112,14 @@ Future<void> _openManageSubscriptions(BuildContext context) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          wrKeepCompounds(tr(
-            'Không mở được trang quản lý gói. Bạn vào Cài đặt → tên bạn → Thuê '
-                'bao nhé.',
-            'Could not open subscription management. Go to Settings → your '
-                'name → Subscriptions.',
-          )),
+          wrKeepCompounds(
+            tr(
+              'Không mở được trang quản lý gói. Bạn vào '
+                  '${WrIapStore.current.manageHint} nhé.',
+              'Could not open subscription management. Go to '
+                  '${WrIapStore.current.manageHint}.',
+            ),
+          ),
         ),
       ),
     );
