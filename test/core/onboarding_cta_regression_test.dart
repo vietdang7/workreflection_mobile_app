@@ -39,7 +39,7 @@ void main() {
     ///
     /// Đây là BẰNG CHỨNG rằng `computeRedirect` đúng — data sai (stale cache).
     test(
-      'BUG CONFIRMED: computeRedirect(seenOnboarding=false, /auth) → /onboarding (stale cache loop)',
+      '/auth luôn mở cho người chưa đăng nhập, kể cả khi cờ onboarding còn false',
       () {
         // Đây là điều xảy ra khi FutureProvider chưa được invalidate:
         // seenOnboarding vẫn là false dù prefs đã ghi true
@@ -48,9 +48,9 @@ void main() {
           seenOnboarding: false, // stale cached value — root cause
           location: '/auth',
         );
-        // computeRedirect ĐÚNG khi trả về '/onboarding' với seenOnboarding=false.
-        // Bug không nằm ở đây — bug nằm ở việc seenOnboarding bị stale.
-        expect(redirect, '/onboarding');
+        // Từ d504dd0 khách làm nhìn lại lần đầu (cờ còn false) vẫn được đẩy
+        // sang /auth để lưu hành trình; /auth mà bật về /onboarding thì kẹt.
+        expect(redirect, isNull);
       },
     );
 

@@ -189,7 +189,9 @@ workflows:
   # API. Hiện cứ tải file .aab trong artifacts lên track Internal testing.
   android-release:
     name: Android · CH Play (AAB)
-    instance_type: linux_x2
+    # Gói Codemagic hiện tại chỉ cho máy Mac (linux_x2 báo "not available with
+    # the current billing plan"). Máy Mac build Android bình thường.
+    instance_type: mac_mini_m2
     max_build_duration: 60
 
     environment:
