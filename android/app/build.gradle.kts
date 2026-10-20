@@ -79,3 +79,14 @@ android {
 flutter {
     source = "../.."
 }
+
+// Google Play bắt buộc thư viện native căn trang 16 KB (targetSdk 35+).
+// mobile_scanner 5.2.3 kéo ML Kit barcode-scanning 17.2.0 và CameraX 1.3.3,
+// hai bản này còn căn 4 KB (libbarhopper_v3.so, libimage_processing_util_jni.so).
+// Ép lên bản đã căn 16 KB ở đây thay vì nâng mobile_scanner 6.x, vì bản 6 kéo
+// sàn iOS lên 15.5. Gradle chọn bản cao hơn nên code của plugin vẫn giữ nguyên.
+dependencies {
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    implementation("androidx.camera:camera-camera2:1.4.2")
+    implementation("androidx.camera:camera-lifecycle:1.4.2")
+}
